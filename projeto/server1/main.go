@@ -3,13 +3,16 @@ package main
 import (
 	"log"
 	"net/http"
-	"projeto/server1/funcoes"
+	"projeto/funcoes"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/rota2", funcoes.GetRotas).Methods("GET")
+	router.HandleFunc("/rota", funcoes.GetRotas).Methods("GET")
+	router.HandleFunc("/compras", funcoes.Comprar).Methods("POST")        //Comprar
+	router.HandleFunc("/compras/{id}", funcoes.VerCompras).Methods("GET") //Ver compras
+	router.HandleFunc("/rota", funcoes.GetRotas).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }

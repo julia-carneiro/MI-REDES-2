@@ -1,0 +1,32 @@
+{
+    "Feira":[
+        {
+            "Destino": "Salvador",
+            "Vagas": 12,
+            "Peso": 5,
+            "Comp": "A"
+        },
+        {
+            "Destino": "São Paulo",
+            "Vagas": 20,
+            "Peso": 30, 
+            "Comp": "A"
+        }
+    ],
+
+    "Salvador":[
+        {
+            "Destino": "São Paulo",
+            "Vagas": 10,
+            "Peso": 5,
+            "Comp": "A"
+        },
+        {
+            "Destino": "Fortaleza",
+            "Vagas": 10,
+            "Peso": 3,
+            "Comp": "A"
+        }
+    ]
+
+}

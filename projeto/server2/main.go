@@ -10,6 +10,7 @@ type Rota struct {
 	Destino string `json:"Destino"`
 	Vagas   int    `json:"Vagas"`
 	Peso    int    `json:"Peso"`
+	Comp    string `json:"Comp"`
 }
 
 func main() {

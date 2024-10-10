@@ -1,0 +1,32 @@
+{
+    "Recife":[
+        {
+            "Destino": "Feira",
+            "Vagas": 12,
+            "Peso": 5,
+            "Comp": "C"
+        },
+        {
+            "Destino": "Salvador",
+            "Vagas": 12,
+            "Peso": 5,
+            "Comp": "C"
+        }
+    ],
+
+    "Fortaleza":[
+        {
+            "Destino": "Salvador",
+            "Vagas": 10,
+            "Peso": 3,
+            "Comp": "C"
+        },
+        {
+            "Destino": "São Paulo",
+            "Vagas": 10,
+            "Peso": 5,
+            "Comp": "C"
+        }
+    ]
+
+}

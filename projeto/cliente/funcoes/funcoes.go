@@ -1,11 +1,23 @@
 package funcoes
 
-import(
+import (
 	"fmt"
 	"net"
 )
 
-//Conecta com o servidor
+type Pessoa struct {
+	Nome      string
+	Sobrenome string
+	Cpf       string
+}
+type Compra struct {
+	Origem  string
+	Destino string
+	Comp    string
+	Pessoa  Pessoa
+}
+
+// Conecta com o servidor
 func ConectarServidor(ADRESS string) net.Conn {
 	// Conectando ao servidor na porta 8080
 	conn, err := net.Dial("tcp", ADRESS)
