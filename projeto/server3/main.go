@@ -1,31 +1,30 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"net"
-	"projeto/server3/funcoes"
+	"net/http"
 )
 
-var ADRESS string = "0.0.0.0:22358"
+type Rota struct {
+	Destino string `json:"Destino"`
+	Vagas   int    `json:"Vagas"`
+	Peso    int    `json:"Peso"`
+}
 
 func main() {
-	// Escutando na porta 22356
-	ln, err := net.Listen("tcp", ADRESS)
+	response, err := http.Get("http://localhost:8000/rota")
 	if err != nil {
-		fmt.Println("Erro ao iniciar o servidor:", err)
+		fmt.Println("Error calling Server 1:", err)
 		return
 	}
-	defer ln.Close()
-	fmt.Printf("Servidor iniciado em: %s", ADRESS)
+	defer response.Body.Close()
 
-	for {
-		// Aceitando conexões dos clientes
-		conn, err := ln.Accept()
-		if err != nil {
-			fmt.Println("Erro ao aceitar conexão:", err)
-			continue
-		}
-		//cria uma gorotine para cada conexão
-		go funcoesServer03.HandleConnection(conn)
+	var rota Rota
+	if err := json.NewDecoder(response.Body).Decode(&rota); err != nil {
+		fmt.Println("Error decoding response:", err)
+		return
 	}
+
+	fmt.Printf("Recebido: %+v\n", rota)
 }

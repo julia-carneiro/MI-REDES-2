@@ -1,26 +1,30 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"projeto/server2/funcoes"
 	"net/http"
 )
 
-
+type Rota struct {
+	Destino string `json:"Destino"`
+	Vagas   int    `json:"Vagas"`
+	Peso    int    `json:"Peso"`
+}
 
 func main() {
-	response, err := http.Get("http://localhost:8000/rotas")
+	response, err := http.Get("http://localhost:8000/rota")
 	if err != nil {
-        fmt.Println("Error calling Server 1:", err)
-        return
-    }
-    defer response.Body.Close()
+		fmt.Println("Error calling Server 1:", err)
+		return
+	}
+	defer response.Body.Close()
 
-    var rota string
-    if err := json.NewDecoder(response.Body).Decode(&rota); err != nil {
-        fmt.Println("Error decoding response:", err)
-        return
-    }
+	var rota Rota
+	if err := json.NewDecoder(response.Body).Decode(&rota); err != nil {
+		fmt.Println("Error decoding response:", err)
+		return
+	}
 
-    fmt.Println("Received from Server 1:", rota.Text)
+	fmt.Printf("Recebido: %+v\n", rota)
 }
