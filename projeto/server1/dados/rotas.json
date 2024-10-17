@@ -4,13 +4,15 @@
             "Destino": "Salvador",
             "Vagas": 12,
             "Peso": 5,
-            "Comp": "A"
+            "Comp": "A",
+            "ID": 1
         },
         {
             "Destino": "São Paulo",
             "Vagas": 20,
             "Peso": 30, 
-            "Comp": "A"
+            "Comp": "A",
+            "ID": 2
         }
     ],
 
@@ -19,13 +21,15 @@
             "Destino": "São Paulo",
             "Vagas": 10,
             "Peso": 5,
-            "Comp": "A"
+            "Comp": "A",
+            "ID": 3
         },
         {
             "Destino": "Fortaleza",
             "Vagas": 10,
             "Peso": 3,
-            "Comp": "A"
+            "Comp": "A",
+            "ID": 4
         }
     ]
 

@@ -21,10 +21,13 @@ type User struct { //Estrutura de dados do cliente
 	Cpf string `json:"Cpf"`
 }
 
-type Rota struct { //Estrura de dados de uma rota
+type Trecho struct {
+	Origem  string `json:"Origem"`
 	Destino string `json:"Destino"`
 	Vagas   int    `json:"Vagas"`
 	Peso    int    `json:"Peso"`
+	Comp    string `json:"Comp"`
+	ID      int    `json:"ID"`
 }
 
 type Dados struct { //Estrutura de dados da mensagem recebida no cliente

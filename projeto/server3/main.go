@@ -6,11 +6,13 @@ import (
 	"net/http"
 )
 
-type Rota struct {
+type Trecho struct {
+	Origem  string `json:"Origem"`
 	Destino string `json:"Destino"`
 	Vagas   int    `json:"Vagas"`
 	Peso    int    `json:"Peso"`
 	Comp    string `json:"Comp"`
+	ID      int    `json: "ID"`
 }
 
 func main() {
@@ -21,7 +23,7 @@ func main() {
 	}
 	defer response.Body.Close()
 
-	var rota Rota
+	var rota Trecho
 	if err := json.NewDecoder(response.Body).Decode(&rota); err != nil {
 		fmt.Println("Error decoding response:", err)
 		return
