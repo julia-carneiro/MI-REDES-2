@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"projeto/funcoes"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	fmt.Print("teste")
 	router := mux.NewRouter()
 	router.HandleFunc("/rota", funcoes.GetRotas).Methods("GET")
 	router.HandleFunc("/compras", funcoes.Comprar).Methods("POST") //Comprar

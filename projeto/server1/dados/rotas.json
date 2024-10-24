@@ -5,14 +5,14 @@
             "Vagas": 12,
             "Peso": 5,
             "Comp": "A",
-            "ID": 1
+            "ID": "1"
         },
         {
             "Destino": "São Paulo",
             "Vagas": 20,
             "Peso": 30, 
             "Comp": "A",
-            "ID": 2
+            "ID": "2"
         }
     ],
 
@@ -22,14 +22,14 @@
             "Vagas": 10,
             "Peso": 5,
             "Comp": "A",
-            "ID": 3
+            "ID": "3"
         },
         {
             "Destino": "Fortaleza",
             "Vagas": 10,
             "Peso": 3,
             "Comp": "A",
-            "ID": 4
+            "ID": "4"
         }
     ]
 

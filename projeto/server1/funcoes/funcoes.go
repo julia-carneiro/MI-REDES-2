@@ -171,7 +171,7 @@ func LerRotas() map[string][]Trecho {
 	defer file.Close()
 
 	// Criar um mapa para armazenar as rotas
-	var rotas map[string][]Trecho
+	rotas := make(map[string][]Trecho)
 
 	// Decodificar o arquivo JSON para o mapa
 	decoder := json.NewDecoder(file)
