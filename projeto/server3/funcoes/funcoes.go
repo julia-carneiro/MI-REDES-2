@@ -1,13 +1,12 @@
 package funcoes
 
 import (
-	"bufio"
+	
 	"encoding/json"
 	"fmt"
-	"net"
-	//  "os"
-	// "sync"
-	// "path/filepath"
+	"net/http"
+	"os"
+	
 )
 
 type Request int
@@ -41,36 +40,34 @@ type Dados struct { //Estrutura de dados da mensagem recebida no cliente
 	DadosCompra  *Compra `json:"DadosCompra"`
 	DadosUsuario *User   `json:"DadosUsuario"`
 }
+var rotas map[string][]Trecho
+var filePathRotas = "dados/rotas.json" //caminho para arquivo de rotas
 
-// Conecta com o servidor
-func ConectarServidor(ADRESS string) net.Conn {
-	// Conectando ao servidor na porta 8080
-	conn, err := net.Dial("tcp", ADRESS)
-	if err != nil {
-		fmt.Println("Erro ao conectar ao servidor:", err)
-		return nil
-	}
+// Pega todas as rotas do arquivo json
+func GetRotas(w http.ResponseWriter, r *http.Request) {
+	rotas = LerRotas()
 
-	return conn
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(rotas)
 }
 
-func HandleConnection(conn net.Conn) {
-	defer conn.Close()
-	fmt.Println("\nCliente conectado:", conn.RemoteAddr())
-
-	message, err := bufio.NewReader(conn).ReadString('\n')
+func LerRotas() map[string][]Trecho {
+	// Abra o arquivo
+	file, err := os.Open(filePathRotas)
 	if err != nil {
-		fmt.Println("Erro ao ler a mensagem:", err)
-		return
+		fmt.Println("Erro ao abrir o arquivo:", err)
+		return nil
 	}
+	defer file.Close()
 
-	var dados Dados
-	err = json.Unmarshal([]byte(message), &dados)
-	if err != nil {
-		conn.Write([]byte("Erro no formato dos dados enviados. Esperado JSON.\n"))
-		return
+	// Criar um mapa para armazenar as rotas
+	rotas := make(map[string][]Trecho)
+
+	// Decodificar o arquivo JSON para o mapa
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&rotas); err != nil {
+		fmt.Println("Erro ao decodificar o JSON:", err)
+		return nil
 	}
-
-	fmt.Println("\nMensagem recebida do cliente:", dados)
-
+	return rotas
 }

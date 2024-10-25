@@ -7,6 +7,7 @@ import (
 	// "os"
 	// "sessao3/cliente/funcoesCliente"
 	// "strings"
+	"projeto/funcoes"
 	
 )
 /*
@@ -25,5 +26,5 @@ import (
 */
 
 func main(){
-	
+	funcoes.GetRotas()
 }

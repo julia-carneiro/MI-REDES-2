@@ -1,6 +1,6 @@
 {
     "Feira":[
-        {
+        {   "Origem": "Feira",
             "Destino": "Salvador",
             "Vagas": 12,
             "Peso": 5,
@@ -8,6 +8,7 @@
             "ID": "1"
         },
         {
+            "Origem": "Feira",
             "Destino": "São Paulo",
             "Vagas": 20,
             "Peso": 30, 
@@ -18,6 +19,7 @@
 
     "Salvador":[
         {
+            "Origem": "Salvador",
             "Destino": "São Paulo",
             "Vagas": 10,
             "Peso": 5,
@@ -25,6 +27,7 @@
             "ID": "3"
         },
         {
+            "Origem": "Salvador",
             "Destino": "Fortaleza",
             "Vagas": 10,
             "Peso": 3,

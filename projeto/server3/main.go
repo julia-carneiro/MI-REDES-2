@@ -1,33 +1,22 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"projeto/funcoes"
+
+	"github.com/gorilla/mux"
 )
 
-type Trecho struct {
-	Origem  string `json:"Origem"`
-	Destino string `json:"Destino"`
-	Vagas   int    `json:"Vagas"`
-	Peso    int    `json:"Peso"`
-	Comp    string `json:"Comp"`
-	ID      int    `json: "ID"`
-}
+
 
 func main() {
-	response, err := http.Get("http://localhost:8000/rota")
-	if err != nil {
-		fmt.Println("Error calling Server 1:", err)
-		return
-	}
-	defer response.Body.Close()
-
-	var rota Trecho
-	if err := json.NewDecoder(response.Body).Decode(&rota); err != nil {
-		fmt.Println("Error decoding response:", err)
-		return
-	}
-
-	fmt.Printf("Recebido: %+v\n", rota)
+	fmt.Print("teste")
+	router := mux.NewRouter()
+	router.HandleFunc("/rota", funcoes.GetRotas).Methods("GET")
+	// router.HandleFunc("/compras", funcoes.Comprar).Methods("POST") //Comprar
+	//router.HandleFunc("/compras/{id}", funcoes.VerCompras).Methods("GET") //Ver compras
+	//router.HandleFunc("/rota", funcoes.GetRotas).Methods("GET")
+	log.Fatal(http.ListenAndServe(":8002", router))
 }
