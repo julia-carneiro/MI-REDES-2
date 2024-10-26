@@ -29,10 +29,9 @@ type Trecho struct {
 }
 
 func BuscarRotaServidor(servidor string) map[string][]Trecho {
-	var trechos map[string][]Trecho
 
 	// Inicializa o mapa
-	trechos = make(map[string][]Trecho)
+	trechos := make(map[string][]Trecho)
 
 	var resp *http.Response
 	var err error
@@ -97,7 +96,7 @@ func GetRotas() map[string][]Trecho {
 	for chave, valor := range trechosC {
 		rotas[chave] = append(rotas[chave], valor...)
 	}
-	fmt.Println(rotas)
+	//fmt.Println(rotas)
 	return rotas
 }
 
@@ -111,7 +110,7 @@ func SolicitarCompra(rota []Trecho) {
 	var req *http.Request
 
 	// Descobrir qual servidor será enviada a requisição
-	servidor := rota[1].Comp
+	servidor := rota[0].Comp
 	if servidor == "A" {
 		// Criando a requisição POST
 		req, err = http.NewRequest("POST", "http://localhost:8000/compras", bytes.NewBuffer(jsonData))
