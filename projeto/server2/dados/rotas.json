@@ -1,29 +1,29 @@
 {
-    "Feira":[
-        {   "Origem": "Feira",
+    "Feira": [
+        {
+            "Origem": "Feira",
             "Destino": "Salvador",
             "Vagas": 12,
             "Peso": 5,
-            "Comp": "A",
+            "Comp": "B",
             "ID": "1"
         },
         {
             "Origem": "Feira",
             "Destino": "São Paulo",
             "Vagas": 20,
-            "Peso": 30, 
-            "Comp": "A",
+            "Peso": 30,
+            "Comp": "B",
             "ID": "2"
         }
     ],
-
-    "Salvador":[
+    "Salvador": [
         {
             "Origem": "Salvador",
             "Destino": "São Paulo",
             "Vagas": 10,
             "Peso": 5,
-            "Comp": "A",
+            "Comp": "B",
             "ID": "3"
         },
         {
@@ -31,9 +31,8 @@
             "Destino": "Fortaleza",
             "Vagas": 10,
             "Peso": 3,
-            "Comp": "A",
+            "Comp": "B",
             "ID": "4"
         }
     ]
-
 }

@@ -1,22 +1,20 @@
 package funcoes
 
 import (
-	
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
-	
 )
 
-type Request int
+// type Request int
 
-const ( //Tipos de mensagens que podem ser enviadas ao servidor
-	ROTAS Request = iota
-	COMPRA
-	CADASTRO
-	LERCOMPRAS
-)
+// const ( //Tipos de mensagens que podem ser enviadas ao servidor
+// 	ROTAS Request = iota
+// 	COMPRA
+// 	CADASTRO
+// 	LERCOMPRAS
+// )
 
 type Compra struct { //Estrura de dados de compra
 	Cpf     string   `json:"Cpf"`
@@ -32,14 +30,15 @@ type Trecho struct {
 	Vagas   int    `json:"Vagas"`
 	Peso    int    `json:"Peso"`
 	Comp    string `json:"Comp"`
-	ID      int    `json:"ID"`
+	ID      string `json:"ID"`
 }
 
-type Dados struct { //Estrutura de dados da mensagem recebida no cliente
-	Request      Request `json:"Request"`
-	DadosCompra  *Compra `json:"DadosCompra"`
-	DadosUsuario *User   `json:"DadosUsuario"`
-}
+// type Dados struct { //Estrutura de dados da mensagem recebida no cliente
+// 	Request      Request `json:"Request"`
+// 	DadosCompra  *Compra `json:"DadosCompra"`
+// 	DadosUsuario *User   `json:"DadosUsuario"`
+// }
+
 var rotas map[string][]Trecho
 var filePathRotas = "dados/rotas.json" //caminho para arquivo de rotas
 
