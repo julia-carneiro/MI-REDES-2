@@ -101,15 +101,20 @@ func ReservarTrechos(Request PrepareRequest){
 	}
 	FilaRequest[Request.TransactionID] = Request
 }
-
+// função para enviar aos servidores a mensagem de preparação para commit
+// os servidores retornam se conseguiram se prapar ou não
 func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
-	var ok bool
-	var req *http.Request
+	var ok  = true //variavel para pegar a resposta se o servidor conseguiu se preparar ou não
+
+	var req *http.Request //variavel da requisição
+
+	//transforma dados em json
 	jsonData, err := json.Marshal(Request.compra)
 	if err != nil {
 		fmt.Println("Erro ao converter para JSON:", err)
 		return false
 	}
+
 	//Verificar o própio servidor
 	if server == "A"{
 		for _, trecho := range Request.compra.Trechos{
@@ -121,19 +126,22 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
 					fmt.Println("Erro ao converter ID:", err)
 					return false
    				}	
-				ok = TrechoLivre[id]
-				ok = ok && VerificaVagasTrecho(trecho.ID)
+				ok = ok && TrechoLivre[id]//verifica se não tem outro processo fazendo alteração no trecho no momento
+				ok = ok && VerificaVagasTrecho(trecho.ID)//verifica se há vagas no trecho
 			}
 		}
-		ReservarTrechos(Request)
+		if ok{//caso os trechos estiverem livres e tenham vagas, eles são reservados
+			ReservarTrechos(Request)
+		}
 		return ok
+	// envia a mensagem para o servidor 2 se preparar	
 	}else if server == "B"{
 		req, err = http.NewRequest("POST", "http://localhost:8001/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
 			return false
 		}
-
+	//envia mensagem para o servidor 3 se preparar
 	}else if server == "C"{
 		req, err = http.NewRequest("POST", "http://localhost:8001/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
@@ -163,7 +171,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
         return false
     }
 
-	var dadosResposta bool //resposta da preparação
+	var dadosResposta bool //resposta da preparação. Se conseguiu praparar ou não
     err = json.Unmarshal(body, &dadosResposta)
     if err != nil {
         fmt.Println("Erro ao decodificar JSON:", err)
@@ -176,16 +184,22 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
 	} else {
 		fmt.Printf("Erro na solicitação: %s\n", resp.Status)
 	}
-	return dadosResposta
+	return dadosResposta //retorna o resultado da preparação
 }
-
+//função para cancelar o commit pois algum dos servidores não conseguiu realizar a preparação
 func CancelarTransacao(idTransacao string, participantes []string){
+	/*O sevidor participante só precisa ter acesso ao Id da transação, a partir disso
+	ele tem acesso a fila de requisiçõese lá tem a compra com todos os trechos
+	*/
+	//Arquivo de transação
 	var transacao = CancelRequest{TransactionID: idTransacao}
+	//convertendo pra json
 	jsonData, err := json.Marshal(transacao)
     if err != nil {
         fmt.Println("Erro ao converter dados para JSON:", err)
         return
     }
+	//envia para toods os servers
 	for _, server := range participantes{
 		if server == "A"{
 			//cancelar o commit no servidor 1
@@ -224,17 +238,29 @@ func CancelarTransacao(idTransacao string, participantes []string){
 	}
 
 }
-
+//Função para confirmar o commit, qunado todos os servidores conseguiram preparar o commit
 func ConfirmarTransacao(idTransacao string, participantes []string){
-	var transacao = CommitRequest{TransactionID: idTransacao}
+	//Só é necessário enviar o Id da transação
+	var transacao = CommitRequest{TransactionID: idTransacao}//dado da transação
+	//convertendo pra json
 	jsonData, err := json.Marshal(transacao)
     if err != nil {
         fmt.Println("Erro ao converter dados para JSON:", err)
         return
     }
+
+	//mandar para todos os servidores participantes
 	for _, server := range participantes{
 		if server == "A"{
+			//servidor 1(Atual)
 			request := FilaRequest[idTransacao]
+			//subtrai as vagas
+			/*
+			
+			precisa de uma função q salva a compra aq
+			pode ser junto com a de subtrair vagas
+			
+			*/
 			SubtrairVagas(request.compra.Trechos)
 			for _,trecho :=range request.compra.Trechos{
 				if trecho.Comp == "A"{
@@ -250,7 +276,7 @@ func ConfirmarTransacao(idTransacao string, participantes []string){
 			
 			
 		}else if server =="B"{
-
+			//envia mensagem de confirmação para o servidor 2
 			resp, err := http.Post("http://localhost:8001/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
@@ -259,7 +285,7 @@ func ConfirmarTransacao(idTransacao string, participantes []string){
     		defer resp.Body.Close()
 
 		}else if server == "C"{
-			
+			//envia mensagem de confirmação para o servidor 3
 			resp, err := http.Post("http://localhost:8002/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
@@ -274,7 +300,8 @@ func ConfirmarTransacao(idTransacao string, participantes []string){
 }
 
 
-
+//Essa função é chamada apenas quando o servidor é o coordenador
+//função chamada para realizar uma compra
 func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 	// Cria uma instância da struct Compra
     var compra Compra
@@ -291,8 +318,10 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 		compra: compra,
 		TransactionID: transactionID,
 	}
+	//percorre os servidores participantes da compra para poder mandar a compra para eles
 	for _,participante := range compra.Participantes{
-		result := EnviarRequestPreparacao(participante, transacao)
+		//envia a requisição de preparação para os outros servidores
+		result := EnviarRequestPreparacao(participante, transacao) 
 		if !result{//verifica se todos os servidores conseguiram preparar
 			//Cancela o commit caso algum servidor não tenha conseguido preparar para o commit
 			CancelarTransacao(transactionID, compra.Participantes)
@@ -303,8 +332,17 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 	ConfirmarTransacao(transactionID, compra.Participantes)
 	
 }
+
+//Funções que serão usadas quando esse servidor não for o coordenador e for apenas participante
+
+//Função de preparação, vai verificar se o trecho está em uso e se tem vagas nos trechos
+//Caso esteja livre reserva os trechos e retorna true
 func Commit(w http.ResponseWriter, r *http.Request){}
+
+//faz a mesma coisa da função ConfirmarTransacao
 func ConfirmarCommit(w http.ResponseWriter, r *http.Request){}
+
+//Faz a mesma coisa da função CancelarTransacao
 func CancelarCommit(w http.ResponseWriter, r *http.Request){}
 
 func VerCompras(w http.ResponseWriter, r *http.Request) {
