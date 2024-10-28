@@ -14,10 +14,9 @@ type Pessoa struct {
 	Cpf       string
 }
 type Compra struct {
-	Origem  string
-	Destino string
-	Comp    string
 	Pessoa  Pessoa
+	Trechos []Trecho
+	Participantes []string
 }
 type Trecho struct {
 	Origem  string `json:"Origem"`
