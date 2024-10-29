@@ -29,5 +29,7 @@ import (
 func main() {
 	rotas := funcoes.GetRotas()
 	caminho := funcoes.EncontrarTodosCaminhos(rotas, "Feira", "São Paulo")
+
+	
 	fmt.Print(caminho)
 }

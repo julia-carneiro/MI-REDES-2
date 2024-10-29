@@ -43,7 +43,7 @@ type CancelRequest struct {
     TransactionID string // ID da transação a ser cancelada
 }
 
-var TrechoLivre = make([]bool, 10)
+var TrechoLivre = [5]bool{true, true, true,true,true}
 var FilaRequest = make(map[string]PrepareRequest)
 var Rotas map[string][]Trecho
 var filePathRotas = "dados/rotas.json" //caminho para arquivo de rotas
@@ -104,6 +104,7 @@ func ReservarTrechos(Request PrepareRequest){
 // função para enviar aos servidores a mensagem de preparação para commit
 // os servidores retornam se conseguiram se prapar ou não
 func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
+	fmt.Println("\n entrou", server)
 	var ok  = true //variavel para pegar a resposta se o servidor conseguiu se preparar ou não
 
 	var req *http.Request //variavel da requisição
@@ -136,6 +137,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
 		return ok
 	// envia a mensagem para o servidor 2 se preparar	
 	}else if server == "B"{
+		fmt.Println("\nEnviando compra para servidor 2")
 		req, err = http.NewRequest("POST", "http://localhost:8001/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
@@ -143,6 +145,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
 		}
 	//envia mensagem para o servidor 3 se preparar
 	}else if server == "C"{
+		fmt.Println("\nEnviando compra para servidor 2")
 		req, err = http.NewRequest("POST", "http://localhost:8001/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
@@ -186,6 +189,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
 	}
 	return dadosResposta //retorna o resultado da preparação
 }
+
 //função para cancelar o commit pois algum dos servidores não conseguiu realizar a preparação
 func CancelarTransacao(idTransacao string, participantes []string){
 	/*O sevidor participante só precisa ter acesso ao Id da transação, a partir disso
@@ -312,6 +316,7 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
         return
     }
+	fmt.Printf("servidor 1: %+v\n", compra)
 
 	transactionID := uuid.New().String()//cria o id da transação
 	var transacao = PrepareRequest{// determina o dado q será enviado para preparação
@@ -322,6 +327,7 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 	for _,participante := range compra.Participantes{
 		//envia a requisição de preparação para os outros servidores
 		result := EnviarRequestPreparacao(participante, transacao) 
+		fmt.Println("Retorno de ", participante," ", result)
 		if !result{//verifica se todos os servidores conseguiram preparar
 			//Cancela o commit caso algum servidor não tenha conseguido preparar para o commit
 			CancelarTransacao(transactionID, compra.Participantes)
@@ -337,13 +343,26 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 
 //Função de preparação, vai verificar se o trecho está em uso e se tem vagas nos trechos
 //Caso esteja livre reserva os trechos e retorna true
-func Commit(w http.ResponseWriter, r *http.Request){}
+func Commit(w http.ResponseWriter, r *http.Request){
+	var prepareRequest PrepareRequest
+
+    err := json.NewDecoder(r.Body).Decode(&prepareRequest)
+    if err != nil {
+        http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+        return
+    }
+	
+}
 
 //faz a mesma coisa da função ConfirmarTransacao
-func ConfirmarCommit(w http.ResponseWriter, r *http.Request){}
+func ConfirmarCommit(w http.ResponseWriter, r *http.Request){
+
+}
 
 //Faz a mesma coisa da função CancelarTransacao
-func CancelarCommit(w http.ResponseWriter, r *http.Request){}
+func CancelarCommit(w http.ResponseWriter, r *http.Request){
+
+}
 
 func VerCompras(w http.ResponseWriter, r *http.Request) {
 

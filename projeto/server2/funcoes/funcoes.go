@@ -38,7 +38,19 @@ type Trecho struct {
 // 	DadosCompra  *Compra `json:"DadosCompra"`
 // 	DadosUsuario *User   `json:"DadosUsuario"`
 // }
+type PrepareRequest struct {
+    TransactionID string     // ID único da transação
+    compra       Compra   // Rotas apenas para este servidor
+}
+type CommitRequest struct {
+    TransactionID string // ID da transação a ser confirmada
+}
+type CancelRequest struct {
+    TransactionID string // ID da transação a ser cancelada
+}
 
+var TrechoLivre = make([]bool, 10)
+var FilaRequest = make(map[string]PrepareRequest)
 var rotas map[string][]Trecho
 var filePathRotas = "dados/rotas.json" //caminho para arquivo de rotas
 
@@ -69,4 +81,29 @@ func LerRotas() map[string][]Trecho {
 		return nil
 	}
 	return rotas
+}
+
+//Função de preparação, vai verificar se o trecho está em uso e se tem vagas nos trechos
+//Caso esteja livre reserva os trechos e retorna true
+func Commit(w http.ResponseWriter, r *http.Request){
+	fmt.Print("server2")
+	var dados PrepareRequest
+
+    err := json.NewDecoder(r.Body).Decode(&dados)
+    if err != nil {
+        http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+        return
+    }
+	fmt.Print("Servidor 2: ", dados.compra)
+	
+}
+
+//faz a mesma coisa da função ConfirmarTransacao
+func ConfirmarCommit(w http.ResponseWriter, r *http.Request){
+	
+}
+
+//Faz a mesma coisa da função CancelarTransacao
+func CancelarCommit(w http.ResponseWriter, r *http.Request){
+
 }
