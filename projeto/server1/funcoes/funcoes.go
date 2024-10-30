@@ -22,19 +22,19 @@ type Trecho struct {
 	ID      string `json:"ID"`
 }
 type Pessoa struct {
-	Nome      string
-	Sobrenome string
-	Cpf       string
+	Nome      string `json:"Nome"`
+	Sobrenome string `json:"Sobrenome"`
+	Cpf       string `json:"Cpf"`
 }
 type Compra struct {
-	Pessoa  Pessoa
-	Trechos []Trecho
-	Participantes []string
+	Pessoa  Pessoa `json:"Pessoa"`
+	Trechos []Trecho `json:"Trechos"`
+	Participantes []string `json:"Participantes"`
 }
 
 type PrepareRequest struct {
-    TransactionID string     // ID único da transação
-    compra       Compra   // Rotas apenas para este servidor
+    TransactionID string `json:"TransationID"`     // ID único da transação
+    Compra       Compra `json:"Compra"`  // Rotas apenas para este servidor
 }
 type CommitRequest struct {
     TransactionID string // ID da transação a ser confirmada
@@ -92,7 +92,7 @@ func VerificaVagasTrecho(id string)bool{
 }
 
 func ReservarTrechos(Request PrepareRequest){
-	for _ ,trecho := range Request.compra.Trechos{
+	for _ ,trecho := range Request.Compra.Trechos{
 		if trecho.Comp == "A"{
 			id := ConverteID(trecho.ID)
 			TrechoLivre[id]= false
@@ -104,13 +104,13 @@ func ReservarTrechos(Request PrepareRequest){
 // função para enviar aos servidores a mensagem de preparação para commit
 // os servidores retornam se conseguiram se prapar ou não
 func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
-	fmt.Println("\n entrou", server)
+
 	var ok  = true //variavel para pegar a resposta se o servidor conseguiu se preparar ou não
 
 	var req *http.Request //variavel da requisição
 
 	//transforma dados em json
-	jsonData, err := json.Marshal(Request.compra)
+	jsonData, err := json.Marshal(Request)
 	if err != nil {
 		fmt.Println("Erro ao converter para JSON:", err)
 		return false
@@ -118,7 +118,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
 
 	//Verificar o própio servidor
 	if server == "A"{
-		for _, trecho := range Request.compra.Trechos{
+		for _, trecho := range Request.Compra.Trechos{
 			if trecho.Comp == "A"{
 				
 				// Convertendo a string para int
@@ -145,8 +145,8 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
 		}
 	//envia mensagem para o servidor 3 se preparar
 	}else if server == "C"{
-		fmt.Println("\nEnviando compra para servidor 2")
-		req, err = http.NewRequest("POST", "http://localhost:8001/compras/preparar", bytes.NewBuffer(jsonData))
+		fmt.Println("\nEnviando compra para servidor 3")
+		req, err = http.NewRequest("POST", "http://localhost:8002/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
 			return false
@@ -177,7 +177,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest)bool{
 	var dadosResposta bool //resposta da preparação. Se conseguiu praparar ou não
     err = json.Unmarshal(body, &dadosResposta)
     if err != nil {
-        fmt.Println("Erro ao decodificar JSON:", err)
+        fmt.Println("Erro aq ao decodificar JSON:", err)
         return false
     }
 
@@ -208,7 +208,7 @@ func CancelarTransacao(idTransacao string, participantes []string){
 		if server == "A"{
 			//cancelar o commit no servidor 1
 			request := FilaRequest[idTransacao]
-			for _,trecho :=range request.compra.Trechos{
+			for _,trecho :=range request.Compra.Trechos{
 				if trecho.Comp == "A"{
 					//deixa os trechos livres para serem alterados
 					id := ConverteID(trecho.ID)
@@ -265,8 +265,8 @@ func ConfirmarTransacao(idTransacao string, participantes []string){
 			pode ser junto com a de subtrair vagas
 			
 			*/
-			SubtrairVagas(request.compra.Trechos)
-			for _,trecho :=range request.compra.Trechos{
+			SubtrairVagas(request.Compra.Trechos)
+			for _,trecho :=range request.Compra.Trechos{
 				if trecho.Comp == "A"{
 					//deixa os trechos livres para serem alterados
 					id := ConverteID(trecho.ID)
@@ -316,11 +316,10 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
         return
     }
-	fmt.Printf("servidor 1: %+v\n", compra)
 
 	transactionID := uuid.New().String()//cria o id da transação
 	var transacao = PrepareRequest{// determina o dado q será enviado para preparação
-		compra: compra,
+		Compra: compra,
 		TransactionID: transactionID,
 	}
 	//percorre os servidores participantes da compra para poder mandar a compra para eles

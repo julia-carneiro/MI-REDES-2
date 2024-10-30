@@ -16,14 +16,6 @@ import (
 // 	LERCOMPRAS
 // )
 
-type Compra struct { //Estrura de dados de compra
-	Cpf     string   `json:"Cpf"`
-	Caminho []string `json:"Caminho"`
-}
-type User struct { //Estrutura de dados do cliente
-	Cpf string `json:"Cpf"`
-}
-
 type Trecho struct {
 	Origem  string `json:"Origem"`
 	Destino string `json:"Destino"`
@@ -32,15 +24,20 @@ type Trecho struct {
 	Comp    string `json:"Comp"`
 	ID      string `json:"ID"`
 }
+type Pessoa struct {
+	Nome      string `json:"Nome"`
+	Sobrenome string `json:"Sobrenome"`
+	Cpf       string `json:"Cpf"`
+}
+type Compra struct {
+	Pessoa  Pessoa `json:"Pessoa"`
+	Trechos []Trecho `json:"Trechos"`
+	Participantes []string `json:"Participantes"`
+}
 
-// type Dados struct { //Estrutura de dados da mensagem recebida no cliente
-// 	Request      Request `json:"Request"`
-// 	DadosCompra  *Compra `json:"DadosCompra"`
-// 	DadosUsuario *User   `json:"DadosUsuario"`
-// }
 type PrepareRequest struct {
-    TransactionID string     // ID único da transação
-    compra       Compra   // Rotas apenas para este servidor
+    TransactionID string `json:"TransationID"`     // ID único da transação
+    Compra       Compra `json:"Compra"`  // Rotas apenas para este servidor
 }
 type CommitRequest struct {
     TransactionID string // ID da transação a ser confirmada
@@ -86,7 +83,7 @@ func LerRotas() map[string][]Trecho {
 //Função de preparação, vai verificar se o trecho está em uso e se tem vagas nos trechos
 //Caso esteja livre reserva os trechos e retorna true
 func Commit(w http.ResponseWriter, r *http.Request){
-	fmt.Print("server2")
+	fmt.Println("server2")
 	var dados PrepareRequest
 
     err := json.NewDecoder(r.Body).Decode(&dados)
@@ -94,7 +91,17 @@ func Commit(w http.ResponseWriter, r *http.Request){
         http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
         return
     }
-	fmt.Print("Servidor 2: ", dados.compra)
+	// Exemplo de lógica que determina o valor do booleano a ser retornado
+    var result bool
+    // Lógica para definir o valor de result
+    result = true // ou false, dependendo da lógica do seu sistema
+
+    // Define o código de status e o tipo de conteúdo como texto simples
+    w.WriteHeader(http.StatusOK)
+    w.Header().Set("Content-Type", "text/plain")
+
+    // Escreve o valor do booleano como uma string ("true" ou "false")
+    fmt.Fprintf(w, "%t", result)
 	
 }
 
