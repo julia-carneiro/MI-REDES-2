@@ -1,34 +1,27 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
-)
+	"projeto/funcoes"
 
-type Trecho struct {
-	Origem  string `json:"Origem"`
-	Destino string `json:"Destino"`
-	Vagas   int    `json:"Vagas"`
-	Peso    int    `json:"Peso"`
-	Comp    string `json:"Comp"`
-	ID      int    `json: "ID"`
-}
+	"github.com/gorilla/mux"
+)
 
 func main() {
 
-	response, err := http.Get("http://localhost:8000/rota")
-	if err != nil {
-		fmt.Println("Error calling Server 1:", err)
-		return
+	fmt.Print("teste")
+	for i := range funcoes.TrechoLivre {
+		funcoes.TrechoLivre[i] = true
 	}
-	defer response.Body.Close()
-
-	var rota Trecho
-	if err := json.NewDecoder(response.Body).Decode(&rota); err != nil {
-		fmt.Println("Error decoding response:", err)
-		return
-	}
-
-	fmt.Printf("Recebido: %+v\n", rota)
+	router := mux.NewRouter()
+	router.HandleFunc("/rota", funcoes.GetRotas).Methods("GET")
+	router.HandleFunc("/compras", funcoes.SolicitacaoCord).Methods("POST")           //Comprar
+	router.HandleFunc("/compras/preparar", funcoes.Commit).Methods("POST")           //Preparar para commit
+	router.HandleFunc("/compras/confirmar", funcoes.ConfirmarCommit).Methods("POST") //confirmar commit
+	router.HandleFunc("/compras/cancelar", funcoes.CancelarCommit).Methods("POST")   //Cancelar commit
+	//router.HandleFunc("/compras/{id}", funcoes.VerCompras).Methods("GET") //Ver compras
+	//router.HandleFunc("/rota", funcoes.GetRotas).Methods("GET")
+	log.Fatal(http.ListenAndServe(":8001", router))
 }

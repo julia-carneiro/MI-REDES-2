@@ -7,8 +7,10 @@ import (
 	// "os"
 	// "sessao3/cliente/funcoesCliente"
 	// "strings"
-	
+	"fmt"
+	"projeto/funcoes"
 )
+
 /*
 - cliente escolhe a rota normalmente
 - a solicitação de compra é enviada a companhia do primeiro trecho
@@ -24,6 +26,10 @@ import (
 	e não será possível entrar na função
 */
 
-func main(){
+func main() {
+	rotas := funcoes.GetRotas()
+	caminho := funcoes.EncontrarTodosCaminhos(rotas, "Feira", "São Paulo")
+
 	
+	fmt.Print(caminho)
 }
