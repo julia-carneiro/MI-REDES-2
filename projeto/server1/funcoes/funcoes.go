@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
-
+	"sync"
 	"github.com/google/uuid"
 
 	// "log"
@@ -49,6 +49,7 @@ var TrechoLivre = make([]bool, 100)
 var FilaRequest = make(map[string]PrepareRequest)
 var Rotas map[string][]Trecho
 var filePathRotas = "dados/rotas.json" //caminho para arquivo de rotas
+var mutex sync.Mutex
 
 func ConverteID(idstring string) int {
 	id, err := strconv.Atoi(idstring)
@@ -59,7 +60,21 @@ func ConverteID(idstring string) int {
 	return id
 }
 
-func SalvarRotas() {}
+func SalvarRotas(){
+	mutex.Lock()         // Adquire o bloqueio
+	defer mutex.Unlock() // Garante que o bloqueio será liberado
+
+	file, err := os.Create(filePathRotas)
+	if err != nil {
+		fmt.Println("Erro ao escrever:", err)
+		return 
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	encoder.Encode(Rotas)
+}
 
 func SubtrairVagas(trechos []Trecho) {
 	for _, trecho := range trechos {
@@ -324,11 +339,14 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("COMPRA", compra)
+
 	transactionID := uuid.New().String() //cria o id da transação
 	var transacao = PrepareRequest{      // determina o dado q será enviado para preparação
 		Compra:        compra,
 		TransactionID: transactionID,
 	}
+	
 	//percorre os servidores participantes da compra para poder mandar a compra para eles
 	for _, participante := range compra.Participantes {
 		contador := 0
@@ -363,6 +381,7 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("server1")
 	var dados PrepareRequest
 	ok := true
+	entra_if := false
 	err := json.NewDecoder(r.Body).Decode(&dados)
 	if err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
@@ -379,8 +398,9 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 			}
 			ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
 			ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
+			if ok { entra_if = true }
 		}
-		if ok { //caso os trechos estiverem livres e tenham vagas, eles são reservados
+		if ok && entra_if{//caso os trechos estiverem livres e tenham vagas, eles são reservados
 			TrechoLivre[id] = false //trava o trecho
 			ReservarTrechos(dados)
 		}

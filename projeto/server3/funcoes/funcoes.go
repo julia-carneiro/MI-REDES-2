@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-
+	"sync"
 	"github.com/google/uuid"
 )
 
@@ -55,7 +55,8 @@ var TrechoLivre = make([]bool, 100)
 
 var FilaRequest = make(map[string]PrepareRequest)
 var Rotas map[string][]Trecho
-var filePathRotas = "dados/Rotas.json" //caminho para arquivo de Rotas
+var filePathRotas = "dados/rotas.json" //caminho para arquivo de Rotas
+var mutex sync.Mutex
 
 func ConverteID(idstring string) int {
 	id, err := strconv.Atoi(idstring)
@@ -66,7 +67,21 @@ func ConverteID(idstring string) int {
 	return id
 }
 
-func SalvarRotas() {}
+func SalvarRotas() {
+	mutex.Lock()         // Adquire o bloqueio
+	defer mutex.Unlock() // Garante que o bloqueio será liberado
+
+	file, err := os.Create(filePathRotas)
+	if err != nil {
+		fmt.Println("Erro ao escrever:", err)
+		return 
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+	encoder.Encode(Rotas)
+}
 
 func SubtrairVagas(trechos []Trecho) {
 	for _, trecho := range trechos {
@@ -74,13 +89,13 @@ func SubtrairVagas(trechos []Trecho) {
 			for i, x := range Rotas[trecho.Origem] {
 				if trecho.ID == x.ID {
 					Rotas[trecho.Origem][i].Vagas = x.Vagas - 1
+					fmt.Println("Vagas: ",Rotas[trecho.Origem][i].Vagas)
 				}
 			}
 		}
 	}
 	SalvarRotas()
 }
-
 // Pega todas as rotas do arquivo json
 func GetRotas(w http.ResponseWriter, r *http.Request) {
 
@@ -376,18 +391,35 @@ func LerRotas() {
 // Função de preparação, vai verificar se o trecho está em uso e se tem vagas nos trechos
 // Caso esteja livre reserva os trechos e retorna true
 func Commit(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("server3")
-	var dados PrepareRequest
 
+	var dados PrepareRequest
+	ok := true
+	entra_if := false
 	err := json.NewDecoder(r.Body).Decode(&dados)
 	if err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
-	// Exemplo de lógica que determina o valor do booleano a ser retornado
+	var id int
+	for _, trecho := range dados.Compra.Trechos {
+		if trecho.Comp == "C" {
+			// Convertendo a string para int
+			id, err = strconv.Atoi(trecho.ID)
+			if err != nil {
+				fmt.Println("Erro ao converter ID:", err)
+				return
+			}
+			ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
+			ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
+			if ok { entra_if = true }
+		}
+		if ok && entra_if{ //caso os trechos estiverem livres e tenham vagas, eles são reservados
+			TrechoLivre[id] = false //trava o trecho
+			ReservarTrechos(dados)
+		}
+	}
 
-	// Lógica para definir o valor de result
-	var result bool = true // ou false, dependendo da lógica do seu sistema
+	var result bool = ok
 
 	// Define o código de status e o tipo de conteúdo como texto simples
 	w.WriteHeader(http.StatusOK)
@@ -395,21 +427,22 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 
 	// Escreve o valor do booleano como uma string ("true" ou "false")
 	fmt.Fprintf(w, "%t", result)
-
 }
 
 // faz a mesma coisa da função ConfirmarTransacao
 func ConfirmarCommit(w http.ResponseWriter, r *http.Request) {
 	var dados CommitRequest
+	fmt.Println("Commit server 3")
 
 	err := json.NewDecoder(r.Body).Decode(&dados)
 	if err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
+	fmt.Println("DADOS", dados)
 
 	trechosCompra := FilaRequest[dados.TransactionID].Compra.Trechos
-
+	fmt.Println("Trechos compra:", trechosCompra)
 	SubtrairVagas(trechosCompra)
 	for _, trecho := range trechosCompra {
 		if trecho.Comp == "C" {

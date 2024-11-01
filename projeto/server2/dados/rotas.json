@@ -1,39 +1,38 @@
 {
-    "Feira": [
-        {
-            "Origem": "Feira",
-            "Destino": "Salvador",
-            "Vagas": 12,
-            "Peso": 5,
-            "Comp": "B",
-            "ID": "1"
-        },
-        {
-            "Origem": "Feira",
-            "Destino": "São Paulo",
-            "Vagas": 20,
-            "Peso": 20,
-            "Comp": "B",
-            "ID": "2"
-        }
-    ],
-    "Salvador": [
-        {
-            "Origem": "Salvador",
-            "Destino": "São Paulo",
-            "Vagas": 10,
-            "Peso": 5,
-            "Comp": "B",
-            "ID": "3"
-        },
-        {
-            "Origem": "Salvador",
-            "Destino": "Fortaleza",
-            "Vagas": 10,
-            "Peso": 3,
-            "Comp": "B",
-            "ID": "4"
-        }
-    ]
-
+  "Feira": [
+    {
+      "Origem": "Feira",
+      "Destino": "Salvador",
+      "Vagas": 12,
+      "Peso": 5,
+      "Comp": "B",
+      "ID": "1"
+    },
+    {
+      "Origem": "Feira",
+      "Destino": "São Paulo",
+      "Vagas": 19,
+      "Peso": 20,
+      "Comp": "B",
+      "ID": "2"
+    }
+  ],
+  "Salvador": [
+    {
+      "Origem": "Salvador",
+      "Destino": "São Paulo",
+      "Vagas": 10,
+      "Peso": 5,
+      "Comp": "B",
+      "ID": "3"
+    },
+    {
+      "Origem": "Salvador",
+      "Destino": "Fortaleza",
+      "Vagas": 10,
+      "Peso": 3,
+      "Comp": "B",
+      "ID": "4"
+    }
+  ]
 }
