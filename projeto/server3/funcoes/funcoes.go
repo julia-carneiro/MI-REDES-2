@@ -71,9 +71,9 @@ func SalvarRotas() {}
 func SubtrairVagas(trechos []Trecho) {
 	for _, trecho := range trechos {
 		if trecho.Comp == "C" {
-			for _, x := range Rotas[trecho.Origem] {
+			for i, x := range Rotas[trecho.Origem] {
 				if trecho.ID == x.ID {
-					x.Vagas = x.Vagas - 1
+					Rotas[trecho.Origem][i].Vagas = x.Vagas - 1
 				}
 			}
 		}
