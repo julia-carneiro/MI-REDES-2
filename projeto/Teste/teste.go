@@ -93,8 +93,9 @@ func enviarRequisicao(wg *sync.WaitGroup, url string, startSignal <-chan struct{
 		fmt.Println("Erro ao decodificar JSON:", err)
 		return
 	}
+	fmt.Printf("\nResposta do servidor %s:\n %+v \n\n",url, dadosResposta)
 	SalvarInfo(dadosResposta)
-	fmt.Println("Resposta do servidor:", resp.Status)
+	fmt.Println("Status da respota do servidor:", resp.Status)
 }
 
 func main() {
@@ -105,10 +106,11 @@ func main() {
 		"http://localhost:8002/compras",
 	}
 
-	// Número total de requisições desejadas
-	numeroTotalDeRequisicoes := 30
-	// Calcula o número de requisições por servidor
-	numeroDeRequisicoesPorServidor := numeroTotalDeRequisicoes / len(servidores)
+	// // Número total de requisições desejadas
+	// numeroTotalDeRequisicoes := 30
+	// // Calcula o número de requisições por servidor
+	// // numeroDeRequisicoesPorServidor := numeroTotalDeRequisicoes / len(servidores)
+	numero:= 1
 
 	// Dados de exemplo para a compra
 	compra := Compra{
@@ -154,7 +156,7 @@ func main() {
 
 	// Cria uma goroutine para cada requisição simultânea em cada servidor
 	for _, url := range servidores {
-		for i := 0; i < numeroDeRequisicoesPorServidor; i++ {
+		for i := 0; i < numero; i++ {
 			wg.Add(1)
 			go enviarRequisicao(&wg, url, startSignal, compra)
 		}

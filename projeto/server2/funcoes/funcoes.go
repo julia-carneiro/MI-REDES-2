@@ -63,6 +63,8 @@ var FilaRequest = make(map[string]PrepareRequest)
 var Rotas map[string][]Trecho
 var filePathRotas = "dados/rotas.json" //caminho para arquivo de Rotas
 var mutex sync.Mutex
+var mutexVagas sync.Mutex
+var mutexCommit sync.Mutex
 
 func ConverteID(idstring string) int {
 	id, err := strconv.Atoi(idstring)
@@ -90,6 +92,9 @@ func SalvarRotas() {
 }
 
 func SubtrairVagas(trechos []Trecho) {
+	mutexVagas.Lock()         // Adquire o bloqueio
+	defer mutexVagas.Unlock() // Garante que o bloqueio será liberado
+	
 	for _, trecho := range trechos {
 		if trecho.Comp == "B" {
 			for i, x := range Rotas[trecho.Origem] {
@@ -358,7 +363,7 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("COMPRA", compra)
+	fmt.Println("\n\nCompra recebida pelo servidor 2: ", compra)
 
 	transactionID := uuid.New().String() //cria o id da transação
 	var transacao = PrepareRequest{      // determina o dado q será enviado para preparação
@@ -376,7 +381,7 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Retorno de ", participante, " ", result)
 
 			if !result && contador == 10 { //verifica se todos os servidores conseguiram preparar
-				fmt.Println("entrou")
+				fmt.Println("\nEntrou no contador")
 				//Cancela o commit caso algum servidor não tenha conseguido preparar para o commit
 				CancelarTransacao(transactionID, compra.Participantes)
 				// retorna que a compra não teve sucesso
@@ -392,10 +397,11 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 					return
 				}
-
+				fmt.Println("\nResposta da solicitação de compra 1: ", retorno)
 				// Enviando a resposta
 				w.WriteHeader(http.StatusOK)
 				w.Write(response)
+				return
 			} else if result {
 				break
 			}
@@ -412,6 +418,7 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 		Compra:    compra,
 	}
 
+	fmt.Println("\nResposta da solicitação de compra 2: ", retorno)
 	// Serializando a resposta em JSON
 	response, err := json.Marshal(retorno)
 	if err != nil {
@@ -428,7 +435,6 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 // Função de preparação, vai verificar se o trecho está em uso e se tem vagas nos trechos
 // Caso esteja livre reserva os trechos e retorna true
 func Commit(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("server2")
 	var dados PrepareRequest
 	ok := true
 	entra_if := false
@@ -437,6 +443,7 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
+	fmt.Println("\n Mensagem de preparação: ",dados)
 	var id int
 	for _, trecho := range dados.Compra.Trechos {
 		if trecho.Comp == "B" {
@@ -446,9 +453,10 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 				fmt.Println("Erro ao converter ID:", err)
 				return
 			}
-
+			mutexCommit.Lock()
 			ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
 			ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
+			mutexCommit.Unlock()
 			if ok {
 				entra_if = true
 			}
@@ -464,7 +472,7 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 	// Define o código de status e o tipo de conteúdo como texto simples
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain")
-
+	fmt.Println("\nResposta retornada: ", result)
 	// Escreve o valor do booleano como uma string ("true" ou "false")
 	fmt.Fprintf(w, "%t", result)
 }
@@ -479,11 +487,9 @@ func ConfirmarCommit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
-
-	fmt.Println("DADOS", dados)
-
+	
 	trechosCompra := FilaRequest[dados.TransactionID].Compra.Trechos
-	fmt.Println("Trechos compra:", trechosCompra)
+	fmt.Println("\n Requisição a ser confirmada: ", dados.TransactionID)
 
 	SubtrairVagas(trechosCompra)
 	for _, trecho := range trechosCompra {
@@ -507,6 +513,7 @@ func CancelarCommit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	trechosCompra := FilaRequest[dados.TransactionID].Compra.Trechos
+	fmt.Println("\n Requisição a ser cancelada: ", dados.TransactionID)
 	_, existe := FilaRequest[dados.TransactionID]
 	if existe { //verifica se foi essa requisição que fez o bloqueio do trecho
 		for _, trecho := range trechosCompra {
