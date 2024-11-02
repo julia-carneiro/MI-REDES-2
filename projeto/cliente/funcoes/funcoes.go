@@ -14,8 +14,8 @@ type Pessoa struct {
 	Cpf       string
 }
 type Compra struct {
-	Pessoa  Pessoa
-	Trechos []Trecho
+	Pessoa        Pessoa
+	Trechos       []Trecho
 	Participantes []string
 }
 type Trecho struct {
@@ -38,12 +38,15 @@ func BuscarRotaServidor(servidor string) map[string][]Trecho {
 	// Condicional para verificar o servidor
 	if servidor == "A" {
 		// BUSCA NO SERVIDOR 1
+		//resp, err = http.Get("http://server1:8000/rota")
 		resp, err = http.Get("http://localhost:8000/rota")
 	} else if servidor == "B" {
 		// BUSCA NO SERVIDOR 2
+		//resp, err = http.Get("http://server2:8001/rota")
 		resp, err = http.Get("http://localhost:8001/rota")
 	} else if servidor == "C" {
 		// BUSCA NO SERVIDOR 3
+		//resp, err = http.Get("http://server3:8002/rota")
 		resp, err = http.Get("http://localhost:8002/rota")
 	} else {
 		fmt.Println("Servidor desconhecido:", servidor)
@@ -112,6 +115,7 @@ func SolicitarCompra(rota []Trecho) {
 	servidor := rota[0].Comp
 	if servidor == "A" {
 		// Criando a requisição POST
+		//req, err = http.NewRequest("POST", "http://server1:8000/compras", bytes.NewBuffer(jsonData))
 		req, err = http.NewRequest("POST", "http://localhost:8000/compras", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
@@ -119,6 +123,7 @@ func SolicitarCompra(rota []Trecho) {
 		}
 	} else if servidor == "B" {
 		// Criando a requisição POST
+		//req, err = http.NewRequest("POST", "http://server2:8001/compras", bytes.NewBuffer(jsonData))
 		req, err = http.NewRequest("POST", "http://localhost:8001/compras", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
@@ -127,6 +132,7 @@ func SolicitarCompra(rota []Trecho) {
 
 	} else if servidor == "C" {
 		// Criando a requisição POST
+		//		req, err = http.NewRequest("POST", "http://server3:8002/compras", bytes.NewBuffer(jsonData))
 		req, err = http.NewRequest("POST", "http://localhost:8002/compras", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)

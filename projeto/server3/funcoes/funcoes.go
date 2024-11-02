@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+
 	"github.com/google/uuid"
 )
 
@@ -51,6 +52,12 @@ type CancelRequest struct {
 	TransactionID string // ID da transação a ser cancelada
 }
 
+type RetornoCompra struct {
+	Resultado bool   `json:"Resultado"`
+	Server    string `json:"Server"`
+	Compra    Compra `json:"Compra"`
+}
+
 var TrechoLivre = make([]bool, 100)
 
 var FilaRequest = make(map[string]PrepareRequest)
@@ -74,7 +81,7 @@ func SalvarRotas() {
 	file, err := os.Create(filePathRotas)
 	if err != nil {
 		fmt.Println("Erro ao escrever:", err)
-		return 
+		return
 	}
 	defer file.Close()
 
@@ -89,13 +96,14 @@ func SubtrairVagas(trechos []Trecho) {
 			for i, x := range Rotas[trecho.Origem] {
 				if trecho.ID == x.ID {
 					Rotas[trecho.Origem][i].Vagas = x.Vagas - 1
-					fmt.Println("Vagas: ",Rotas[trecho.Origem][i].Vagas)
+					fmt.Println("Vagas: ", Rotas[trecho.Origem][i].Vagas)
 				}
 			}
 		}
 	}
 	SalvarRotas()
 }
+
 // Pega todas as rotas do arquivo json
 func GetRotas(w http.ResponseWriter, r *http.Request) {
 
@@ -168,6 +176,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 	} else if server == "A" {
 		fmt.Println("\nEnviando compra para servidor A")
 		req, err = http.NewRequest("POST", "http://localhost:8000/compras/preparar", bytes.NewBuffer(jsonData))
+		//req, err = http.NewRequest("POST", "http://server1:8000/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
 			return false
@@ -176,6 +185,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 	} else if server == "B" {
 		fmt.Println("\nEnviando compra para servidor B")
 		req, err = http.NewRequest("POST", "http://localhost:8001/compras/preparar", bytes.NewBuffer(jsonData))
+		//req, err = http.NewRequest("POST", "http://server2:8001/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
 			return false
@@ -256,6 +266,7 @@ func CancelarTransacao(idTransacao string, participantes []string) {
 		} else if server == "A" {
 			// envia a solicitação de cancelar commit para o servidor A
 			resp, err := http.Post("http://localhost:8000/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
+			// resp, err := http.Post("http://server1:8000/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
 				return
@@ -265,6 +276,7 @@ func CancelarTransacao(idTransacao string, participantes []string) {
 		} else if server == "B" {
 			// envia a solicitação de cancelar commit para o servidor C
 			resp, err := http.Post("http://localhost:8001/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
+			// resp, err := http.Post("http://server2:8001/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
 				return
@@ -313,6 +325,7 @@ func ConfirmarTransacao(idTransacao string, participantes []string) {
 		} else if server == "A" {
 			//envia mensagem de confirmação para o servidor A
 			resp, err := http.Post("http://localhost:8000/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
+			// resp, err := http.Post("http://server1:8000/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
 				return
@@ -322,6 +335,7 @@ func ConfirmarTransacao(idTransacao string, participantes []string) {
 		} else if server == "B" {
 			//envia mensagem de confirmação para o servidor C
 			resp, err := http.Post("http://localhost:8001/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
+			// resp, err := http.Post("http://server2:8001/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
 				return
@@ -346,24 +360,70 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("COMPRA", compra)
+
 	transactionID := uuid.New().String() //cria o id da transação
 	var transacao = PrepareRequest{      // determina o dado q será enviado para preparação
 		Compra:        compra,
 		TransactionID: transactionID,
 	}
+
 	//percorre os servidores participantes da compra para poder mandar a compra para eles
 	for _, participante := range compra.Participantes {
-		//envia a requisição de preparação para os outros servidores
-		result := EnviarRequestPreparacao(participante, transacao)
-		fmt.Println("Retorno de ", participante, " ", result)
-		if !result { //verifica se todos os servidores conseguiram preparar
-			//Cancela o commit caso algum servidor não tenha conseguido preparar para o commit
-			CancelarTransacao(transactionID, compra.Participantes)
-			return
+		contador := 0
+		for contador <= 10 {
+			fmt.Print(contador)
+			//envia a requisição de preparação para os outros servidores
+			result := EnviarRequestPreparacao(participante, transacao)
+			fmt.Println("Retorno de ", participante, " ", result)
+
+			if !result && contador == 10 { //verifica se todos os servidores conseguiram preparar
+				fmt.Println("entrou")
+				//Cancela o commit caso algum servidor não tenha conseguido preparar para o commit
+				CancelarTransacao(transactionID, compra.Participantes)
+				// retorna que a compra não teve sucesso
+				retorno := RetornoCompra{
+					Resultado: false,
+					Server:    "C",
+					Compra:    compra,
+				}
+
+				// Serializando a resposta em JSON
+				response, err := json.Marshal(retorno)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				// Enviando a resposta
+				w.WriteHeader(http.StatusOK)
+				w.Write(response)
+			} else if result {
+				break
+			}
+			contador++
 		}
+
 	}
 	// caso todos os servidores conseguirem se preparar para o commit, então o commit é realizado
 	ConfirmarTransacao(transactionID, compra.Participantes)
+	//retorna que a compra foi bem sucedida
+	retorno := RetornoCompra{
+		Resultado: true,
+		Server:    "C",
+		Compra:    compra,
+	}
+
+	// Serializando a resposta em JSON
+	response, err := json.Marshal(retorno)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Enviando a resposta
+	w.WriteHeader(http.StatusOK)
+	w.Write(response)
 
 }
 
@@ -411,9 +471,11 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 			}
 			ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
 			ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
-			if ok { entra_if = true }
+			if ok {
+				entra_if = true
+			}
 		}
-		if ok && entra_if{ //caso os trechos estiverem livres e tenham vagas, eles são reservados
+		if ok && entra_if { //caso os trechos estiverem livres e tenham vagas, eles são reservados
 			TrechoLivre[id] = false //trava o trecho
 			ReservarTrechos(dados)
 		}

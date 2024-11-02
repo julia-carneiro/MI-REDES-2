@@ -1,0 +1,44 @@
+[
+  {
+    "Resultado": true,
+    "Server": "A",
+    "Compra": {
+      "Pessoa": {
+        "Nome": "João",
+        "Sobrenome": "Silva",
+        "Cpf": "12345678900"
+      },
+      "Trechos": [
+        {
+          "Origem": "Feira",
+          "Destino": "Salvador",
+          "Vagas": 12,
+          "Peso": 5,
+          "Comp": "A",
+          "ID": "1"
+        },
+        {
+          "Origem": "Feira",
+          "Destino": "São Paulo",
+          "Vagas": 20,
+          "Peso": 20,
+          "Comp": "B",
+          "ID": "2"
+        },
+        {
+          "Origem": "Salvador",
+          "Destino": "São Paulo",
+          "Vagas": 10,
+          "Peso": 5,
+          "Comp": "C",
+          "ID": "3"
+        }
+      ],
+      "Participantes": [
+        "A",
+        "B",
+        "C"
+      ]
+    }
+  }
+]
