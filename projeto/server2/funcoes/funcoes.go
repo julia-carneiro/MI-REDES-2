@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -409,6 +410,7 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 				break
 			}
 			contador++
+			time.Sleep(500 * time.Millisecond)
 		}
 
 	}
