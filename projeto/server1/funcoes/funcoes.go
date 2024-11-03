@@ -59,7 +59,9 @@ var filePathRotas = "dados/rotas.json" //caminho para arquivo de rotas
 var mutex sync.Mutex
 var mutexVagas sync.Mutex
 var mutexCommit sync.Mutex
- 
+var server2 = "http://server2:"
+var server3 = "http://server3:"
+
 func ConverteID(idstring string) int {
 	id, err := strconv.Atoi(idstring)
 	if err != nil {
@@ -86,7 +88,7 @@ func SalvarRotas() {
 }
 
 func SubtrairVagas(trechos []Trecho) {
-	mutexVagas.Lock()         // Adquire o bloqueio
+	mutexVagas.Lock() // Adquire o bloqueio
 	defer mutexVagas.Unlock()
 	for _, trecho := range trechos {
 		if trecho.Comp == "A" {
@@ -171,7 +173,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 	} else if server == "B" {
 		fmt.Println("\nEnviando compra para servidor 2")
 		//req, err = http.NewRequest("POST", "http://server2:8001/compras/preparar", bytes.NewBuffer(jsonData))
-		req, err = http.NewRequest("POST", "http://localhost:8001/compras/preparar", bytes.NewBuffer(jsonData))
+		req, err = http.NewRequest("POST", server2+"8001/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
 			return false
@@ -180,7 +182,7 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 	} else if server == "C" {
 		fmt.Println("\nEnviando compra para servidor 3")
 		//req, err = http.NewRequest("POST", "http://server3:8002/compras/preparar", bytes.NewBuffer(jsonData))
-		req, err = http.NewRequest("POST", "http://localhost:8002/compras/preparar", bytes.NewBuffer(jsonData))
+		req, err = http.NewRequest("POST", server3+"8002/compras/preparar", bytes.NewBuffer(jsonData))
 		if err != nil {
 			fmt.Println("Erro ao criar a requisição:", err)
 			return false
@@ -262,7 +264,7 @@ func CancelarTransacao(idTransacao string, participantes []string) {
 		} else if server == "B" {
 			// envia a solicitação de cancelar commit para o servidor 2
 			//resp, err := http.Post("http://server2:8001/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
-			resp, err := http.Post("http://localhost:8001/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
+			resp, err := http.Post(server2+"8001/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
 				return
@@ -272,7 +274,7 @@ func CancelarTransacao(idTransacao string, participantes []string) {
 		} else if server == "C" {
 			// envia a solicitação de cancelar commit para o servidor 3
 			//resp, err := http.Post("http://server3:8002/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
-			resp, err := http.Post("http://localhost:8002/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
+			resp, err := http.Post(server3+"8002/compras/cancelar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
 				return
@@ -320,7 +322,7 @@ func ConfirmarTransacao(idTransacao string, participantes []string) {
 
 		} else if server == "B" {
 			//envia mensagem de confirmação para o servidor 2
-			resp, err := http.Post("http://localhost:8001/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
+			resp, err := http.Post(server2+"8001/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
 			//resp, err := http.Post("http://server2:8001/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
@@ -331,7 +333,7 @@ func ConfirmarTransacao(idTransacao string, participantes []string) {
 		} else if server == "C" {
 			//envia mensagem de confirmação para o servidor 3
 			//resp, err := http.Post("http://server3:8002/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
-			resp, err := http.Post("http://localhost:8002/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
+			resp, err := http.Post(server3+"8002/compras/confirmar", "application/json", bytes.NewBuffer(jsonData))
 			if err != nil {
 				fmt.Println("Erro ao enviar request:", err)
 				return
@@ -438,7 +440,7 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("\n Mensagem de preparação: ",dados)
+	fmt.Println("\n Mensagem de preparação: ", dados)
 	var id int
 	for _, trecho := range dados.Compra.Trechos {
 		if trecho.Comp == "A" {
@@ -482,7 +484,7 @@ func ConfirmarCommit(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
-	
+
 	trechosCompra := FilaRequest[dados.TransactionID].Compra.Trechos
 	fmt.Println("\n Requisição a ser confirmada: ", dados.TransactionID)
 

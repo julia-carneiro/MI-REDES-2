@@ -27,6 +27,10 @@ type Trecho struct {
 	ID      string `json:"ID"`
 }
 
+var server1 = "http://server1:"
+var server2 = "http://server2:"
+var server3 = "http://server3:"
+
 func BuscarRotaServidor(servidor string) map[string][]Trecho {
 
 	// Inicializa o mapa
@@ -39,15 +43,15 @@ func BuscarRotaServidor(servidor string) map[string][]Trecho {
 	if servidor == "A" {
 		// BUSCA NO SERVIDOR 1
 		//resp, err = http.Get("http://server1:8000/rota")
-		resp, err = http.Get("http://localhost:8000/rota")
+		resp, err = http.Get(server1 + "8000/rota")
 	} else if servidor == "B" {
 		// BUSCA NO SERVIDOR 2
 		//resp, err = http.Get("http://server2:8001/rota")
-		resp, err = http.Get("http://localhost:8001/rota")
+		resp, err = http.Get(server2 + "8001/rota")
 	} else if servidor == "C" {
 		// BUSCA NO SERVIDOR 3
 		//resp, err = http.Get("http://server3:8002/rota")
-		resp, err = http.Get("http://localhost:8002/rota")
+		resp, err = http.Get(server3 + "8002/rota")
 	} else {
 		fmt.Println("Servidor desconhecido:", servidor)
 		return nil

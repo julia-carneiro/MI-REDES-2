@@ -93,7 +93,7 @@ func enviarRequisicao(wg *sync.WaitGroup, url string, startSignal <-chan struct{
 		fmt.Println("Erro ao decodificar JSON:", err)
 		return
 	}
-	fmt.Printf("\nResposta do servidor %s:\n %+v \n\n",url, dadosResposta)
+	fmt.Printf("\nResposta do servidor %s:\n %+v \n\n", url, dadosResposta)
 	SalvarInfo(dadosResposta)
 	fmt.Println("Status da respota do servidor:", resp.Status)
 }
@@ -101,16 +101,16 @@ func enviarRequisicao(wg *sync.WaitGroup, url string, startSignal <-chan struct{
 func main() {
 	// URLs dos servidores
 	servidores := []string{
-		"http://localhost:8000/compras",
-		"http://localhost:8001/compras",
-		"http://localhost:8002/compras",
+		"http://server1:8000/compras",
+		"http://server2:8001/compras",
+		"http://server3:8002/compras",
 	}
 
 	// // Número total de requisições desejadas
 	// numeroTotalDeRequisicoes := 30
 	// // Calcula o número de requisições por servidor
 	// // numeroDeRequisicoesPorServidor := numeroTotalDeRequisicoes / len(servidores)
-	numero:= 1
+	numero := 1
 
 	// Dados de exemplo para a compra
 	compra := Compra{
@@ -120,29 +120,29 @@ func main() {
 			Cpf:       "12345678900",
 		},
 		Trechos: []Trecho{
-			{   
-				Origem: "Feira",
+			{
+				Origem:  "Feira",
 				Destino: "Salvador",
-				Vagas: 12,
-				Peso: 5,
-				Comp: "A",
-				ID: "1",
-        	},
+				Vagas:   12,
+				Peso:    5,
+				Comp:    "A",
+				ID:      "1",
+			},
 			{
-				Origem: "Feira",
+				Origem:  "Feira",
 				Destino: "São Paulo",
-				Vagas: 20,
-				Peso: 20,
-				Comp: "B",
-				ID: "2",
-        	},
+				Vagas:   20,
+				Peso:    20,
+				Comp:    "B",
+				ID:      "2",
+			},
 			{
-				Origem: "Salvador",
+				Origem:  "Salvador",
 				Destino: "São Paulo",
-				Vagas: 10,
-				Peso: 5,
-				Comp: "C",
-				ID: "3",
+				Vagas:   10,
+				Peso:    5,
+				Comp:    "C",
+				ID:      "3",
 			},
 		},
 		Participantes: []string{"A", "B", "C"},
