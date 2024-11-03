@@ -17,6 +17,7 @@ func main() {
 	}
 	router := mux.NewRouter()
 	router.HandleFunc("/rota", funcoes.GetRotas).Methods("GET")
+	router.HandleFunc("/rota/MenorCaminho", funcoes.BuscaRotas).Methods("GET")
 	router.HandleFunc("/compras", funcoes.SolicitacaoCord).Methods("POST")           //Comprar
 	router.HandleFunc("/compras/preparar", funcoes.Commit).Methods("POST")           //Preparar para commit
 	router.HandleFunc("/compras/confirmar", funcoes.ConfirmarCommit).Methods("POST") //confirmar commit

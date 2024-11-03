@@ -9,6 +9,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	
 )
 
 // Estruturas definidas para a compra
@@ -168,6 +169,7 @@ func main() {
 
 	// Espera todas as goroutines completarem
 	wg.Wait()
+	Teste2()
 
 	fmt.Println("Teste finalizado")
 }

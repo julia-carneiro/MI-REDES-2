@@ -3,7 +3,6 @@ package funcoes
 import (
 	"container/heap"
 	"sort"
-	"fmt"
 )
 
 type Caminho struct {
@@ -14,7 +13,6 @@ type Caminho struct {
 // EncontrarTodosCaminhosMenorParaMaior encontra todos os caminhos possíveis do ponto de origem ao destino,
 // retornando uma lista de listas de Trecho, ordenada pelo custo total (do menor para o maior).
 func EncontrarTodosCaminhos(rotas map[string][]Trecho, origem, destino string) [][]Trecho {
-	fmt.Println("Entrou em encontrarTodosCaminhos")
 	pq := &PriorityQueue{}
 	heap.Init(pq)
 

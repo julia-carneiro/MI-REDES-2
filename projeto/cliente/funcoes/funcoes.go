@@ -80,6 +80,7 @@ func BuscarRotaServidor(servidor string) map[string][]Trecho {
 	return trechos
 }
 
+
 func GetRotas() map[string][]Trecho {
 	// Inicializa o mapa
 	rotas := make(map[string][]Trecho)

@@ -61,6 +61,11 @@ type RetornoCompra struct {
 
 var TrechoLivre = make([]bool, 100)
 
+type ReqRotas struct{
+	Origem string `json:"Origem"`
+	Destino string `json:"Destino"`
+}
+
 var FilaRequest = make(map[string]PrepareRequest)
 var Rotas map[string][]Trecho
 var filePathRotas = "dados/rotas.json" //caminho para arquivo de Rotas
@@ -69,6 +74,89 @@ var mutexVagas sync.Mutex
 var mutexCommit sync.Mutex
 var server1 = "http://server1:"
 var server2 = "http://server2:"
+
+func BuscarRotaServidor(servidor string) map[string][]Trecho {
+	// Inicializa o mapa
+	trechos := make(map[string][]Trecho)
+
+	var resp *http.Response
+	var err error
+
+	// Condicional para verificar o servidor
+	if servidor == "A" {
+		// BUSCA NO SERVIDOR 1
+		resp, err = http.Get(server1 + "8000/rota")
+	} else if servidor == "B" {
+		// BUSCA NO SERVIDOR 2
+		resp, err = http.Get(server2 + "8001/rota")
+	} else if servidor == "C" {
+		// BUSCA NO SERVIDOR 3
+		LerRotas()
+		trechos = Rotas
+		
+	} else {
+		fmt.Println("Servidor desconhecido:", servidor)
+		return nil
+	}
+
+	if err != nil {
+		fmt.Println("Erro ao fazer a requisição:", err)
+		return nil
+	}
+	defer resp.Body.Close()
+
+	// Lendo o corpo da resposta
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Erro ao ler o corpo da resposta:", err)
+		return nil
+	}
+	//fmt.Println(body)
+	// Decodificando o JSON para o mapa
+	err = json.Unmarshal(body, &trechos)
+	if err != nil {
+		fmt.Println("Erro ao converter o JSON:", err)
+		return nil
+	}
+
+	return trechos
+}
+
+func BuscaRotas(w http.ResponseWriter, r *http.Request){
+	var reqrotas ReqRotas
+	err := json.NewDecoder(r.Body).Decode(&reqrotas)
+	if err != nil {
+		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+		return
+	}
+	// Inicializa o mapa
+	rotas := make(map[string][]Trecho)
+
+	trechosA := BuscarRotaServidor("A")
+	trechosB := BuscarRotaServidor("B")
+	trechosC := BuscarRotaServidor("C")
+
+	// concatena trechosA com rotas
+	for chave, valor := range trechosA {
+		rotas[chave] = append(rotas[chave], valor...)
+	}
+
+	// concatena trechosB com rotas
+	for chave, valor := range trechosB {
+		rotas[chave] = append(rotas[chave], valor...)
+	}
+
+	// concatena trechosC com rotas
+	for chave, valor := range trechosC {
+		rotas[chave] = append(rotas[chave], valor...)
+	}
+
+	var menoresCaminhos = EncontrarTodosCaminhos(rotas,reqrotas.Origem,reqrotas.Destino)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(menoresCaminhos)
+	
+}
 
 func ConverteID(idstring string) int {
 	id, err := strconv.Atoi(idstring)
@@ -114,7 +202,7 @@ func SubtrairVagas(trechos []Trecho) {
 
 // Pega todas as rotas do arquivo json
 func GetRotas(w http.ResponseWriter, r *http.Request) {
-
+	LerRotas()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(Rotas)
 }

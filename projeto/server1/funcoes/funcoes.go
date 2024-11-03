@@ -53,6 +53,11 @@ type RetornoCompra struct {
 	Compra    Compra `json:"Compra"`
 }
 
+type ReqRotas struct{
+	Origem string `json:"Origem"`
+	Destino string `json:"Destino"`
+}
+
 var TrechoLivre = make([]bool, 100)
 var FilaRequest = make(map[string]PrepareRequest)
 var Rotas map[string][]Trecho
@@ -62,6 +67,103 @@ var mutexVagas sync.Mutex
 var mutexCommit sync.Mutex
 var server2 = "http://server2:"
 var server3 = "http://server3:"
+
+func BuscarRotaServidor(servidor string) map[string][]Trecho {
+	fmt.Println("Função de buscar as rotas nos servidores")
+	LerRotas()
+	fmt.Println("Servidor ",servidor)
+	// Inicializa o mapa
+	trechos := make(map[string][]Trecho)
+
+	var resp *http.Response
+	var err error
+
+	// Condicional para verificar o servidor
+	if servidor == "A" {
+		// BUSCA NO SERVIDOR 1
+		LerRotas() // Certifique-se de que LerRotas popula corretamente o mapa Rotas
+		trechos = Rotas
+		fmt.Println("Dentro de if A")
+	} else if servidor == "B" {
+		// BUSCA NO SERVIDOR 2
+		fmt.Println("Dentro de if B")
+		resp, err = http.Get(server2 + "8001/rota")
+	} else if servidor == "C" {
+		// BUSCA NO SERVIDOR 3
+		fmt.Println("Dentro de if C")
+		resp, err = http.Get(server3 + "8002/rota")
+	} else {
+		fmt.Println("Servidor desconhecido:", servidor)
+		return nil
+	}
+
+	if(servidor == "B" || servidor == "C"){
+
+		// Tratamento de erro da requisição
+		if err != nil {
+			fmt.Println("Erro ao fazer a requisição:", err)
+			return nil
+		}
+		defer resp.Body.Close()
+	
+		// Lendo o corpo da resposta
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Erro ao ler o corpo da resposta:", err)
+			return nil
+		}
+	
+		// Decodificando o JSON para o mapa
+		err = json.Unmarshal(body, &trechos)
+		if err != nil {
+			fmt.Println("Erro ao converter o JSON:", err)
+			return nil
+		}
+	}
+
+	return trechos
+}
+
+func BuscaRotas(w http.ResponseWriter, r *http.Request) {
+	var reqrotas ReqRotas
+	err := json.NewDecoder(r.Body).Decode(&reqrotas)
+	if err != nil {
+		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
+		return
+	}
+	fmt.Println("Função buscar rotas, rota: %+v", reqrotas)
+
+	// Inicializa o mapa
+	rotas := make(map[string][]Trecho)
+
+	// Chama os servidores e adiciona os trechos, se disponíveis
+	if trechosA := BuscarRotaServidor("A"); trechosA != nil {
+		for chave, valor := range trechosA {
+			rotas[chave] = append(rotas[chave], valor...)
+		}
+	}
+	fmt.Println("Depois de solicitar rotas de A")
+
+	if trechosB := BuscarRotaServidor("B"); trechosB != nil {
+		for chave, valor := range trechosB {
+			rotas[chave] = append(rotas[chave], valor...)
+		}
+	}
+	fmt.Println("Depois de solicitar rotas de A")
+	if trechosC := BuscarRotaServidor("C"); trechosC != nil {
+		for chave, valor := range trechosC {
+			rotas[chave] = append(rotas[chave], valor...)
+		}
+	}
+	fmt.Println("Depois de solicitar rotas de A")
+	// Busca todos os caminhos a partir dos dados combinados de `rotas`
+	menoresCaminhos := EncontrarTodosCaminhos(rotas, reqrotas.Origem, reqrotas.Destino)
+	fmt.Printf("Retorno do buscar rotas: %v\n", menoresCaminhos)
+
+	// Envia a resposta como JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(menoresCaminhos)
+}
 
 func ConverteID(idstring string) int {
 	id, err := strconv.Atoi(idstring)
@@ -106,7 +208,7 @@ func SubtrairVagas(trechos []Trecho) {
 
 // Pega todas as rotas do arquivo json
 func GetRotas(w http.ResponseWriter, r *http.Request) {
-
+	LerRotas()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(Rotas)
 }
