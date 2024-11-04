@@ -131,7 +131,7 @@ func BuscaRotas(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("Função buscar rotas, rota: %+v", reqrotas)
+	fmt.Println("Função buscar rotas, rota: ", reqrotas)
 
 	// Inicializa o mapa
 	rotas := make(map[string][]Trecho)

@@ -50,6 +50,7 @@ func Teste2() {
 		fmt.Println("Erro ao converter o JSON de server1:", err)
 		return
 	}
+	fmt.Printf("\nServer 1: %v\n\n", menoresCaminhos1)
 
 	// Envia para server2
 	resp, err = http.Post(server2+"8001/rota/MenorCaminho", "application/json", bytes.NewBuffer(jsonData))
