@@ -3,7 +3,7 @@
     {
       "Origem": "Brasília",
       "Destino": "Salvador",
-      "Vagas": 15,
+      "Vagas": 13,
       "Peso": 20,
       "Comp": "A",
       "ID": "7"
@@ -55,7 +55,7 @@
     {
       "Origem": "Feira",
       "Destino": "Salvador",
-      "Vagas": 0,
+      "Vagas": 5,
       "Peso": 5,
       "Comp": "A",
       "ID": "0"
