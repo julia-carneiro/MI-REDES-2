@@ -2,6 +2,7 @@ package funcoes
 
 import (
 	"container/heap"
+	"fmt"
 	"sort"
 )
 
@@ -10,14 +11,19 @@ type Caminho struct {
 	Custo   int
 }
 
-// EncontrarTodosCaminhosMenorParaMaior encontra todos os caminhos possíveis do ponto de origem ao destino,
+// EncontrarTodosCaminhos encontra todos os caminhos possíveis do ponto de origem ao destino,
 // retornando uma lista de listas de Trecho, ordenada pelo custo total (do menor para o maior).
 func EncontrarTodosCaminhos(rotas map[string][]Trecho, origem, destino string) [][]Trecho {
+	fmt.Println("Entrou em EncontrarTodosCaminhos")
 	pq := &PriorityQueue{}
 	heap.Init(pq)
 
 	// Inicializa o heap com a origem
-	heap.Push(pq, &Item{value: Caminho{Trechos: []Trecho{}, Custo: 0}, prioridade: 0, cidade: origem})
+	heap.Push(pq, &Item{
+		value:      Caminho{Trechos: []Trecho{}, Custo: 0},
+		prioridade: 0,
+		cidade:     origem,
+	})
 
 	var caminhosEncontrados []Caminho
 
@@ -26,23 +32,42 @@ func EncontrarTodosCaminhos(rotas map[string][]Trecho, origem, destino string) [
 		cidadeAtual := atual.cidade
 		caminhoAtual := atual.value.Trechos
 
+		// Verifica se o caminho atual já passou por essa cidade para evitar ciclos
+		visitados := make(map[string]bool)
+		for _, trecho := range caminhoAtual {
+			visitados[trecho.Origem] = true
+		}
+
 		// Se alcançar o destino, armazena o caminho encontrado
 		if cidadeAtual == destino {
-			caminhosEncontrados = append(caminhosEncontrados, Caminho{Trechos: caminhoAtual, Custo: atual.value.Custo})
+			caminhosEncontrados = append(caminhosEncontrados, Caminho{
+				Trechos: caminhoAtual,
+				Custo:   atual.value.Custo,
+			})
 			continue
 		}
 
 		// Verifica todas as rotas a partir da cidade atual
 		for _, trecho := range rotas[cidadeAtual] {
 			cidadeAdjacente := trecho.Destino
+
+			// Evita revisitar cidades já visitadas neste caminho
+			if visitados[cidadeAdjacente] {
+				continue
+			}
+
 			novoCusto := atual.value.Custo + trecho.Peso
 
 			// Cria um novo caminho incluindo o trecho atual
 			novoCaminho := append([]Trecho{}, caminhoAtual...)
 			novoCaminho = append(novoCaminho, trecho)
 
-			// Adiciona o novo caminho no heap
-			heap.Push(pq, &Item{value: Caminho{Trechos: novoCaminho, Custo: novoCusto}, prioridade: novoCusto, cidade: cidadeAdjacente})
+			// Adiciona o novo caminho na fila de prioridade
+			heap.Push(pq, &Item{
+				value:      Caminho{Trechos: novoCaminho, Custo: novoCusto},
+				prioridade: novoCusto,
+				cidade:     cidadeAdjacente,
+			})
 		}
 	}
 
