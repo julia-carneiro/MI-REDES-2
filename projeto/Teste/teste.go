@@ -93,7 +93,22 @@ func enviarRequisicao(wg *sync.WaitGroup, url string, startSignal <-chan struct{
 		fmt.Println("Erro ao decodificar JSON:", err)
 		return
 	}
-	fmt.Printf("\nResposta do servidor %s:\n %+v \n\n", url, dadosResposta)
+
+	fmt.Printf("\nResposta do servidor %s:\n", url)
+	fmt.Printf("Resultado: %v\n", dadosResposta.Resultado)
+	fmt.Printf("Servidor de Resposta: %s\n", dadosResposta.Server)
+	fmt.Printf("Pessoa: %s %s (CPF: %s)\n", 
+			dadosResposta.Compra.Pessoa.Nome, 
+			dadosResposta.Compra.Pessoa.Sobrenome, 
+			dadosResposta.Compra.Pessoa.Cpf)
+
+	fmt.Println("Trechos:")
+	for i, trecho := range dadosResposta.Compra.Trechos {
+		fmt.Printf("  Trecho %d: %s -> %s | Peso: %d | Companhia: %s\n",
+				i+1, trecho.Origem, trecho.Destino, trecho.Peso, trecho.Comp)
+	}
+
+	fmt.Printf("Participantes: %v\n\n", dadosResposta.Compra.Participantes)
 	SalvarInfo(dadosResposta)
 	fmt.Println("Status da respota do servidor:", resp.Status)
 }
