@@ -257,14 +257,6 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 		for _, trecho := range Request.Compra.Trechos {
 			if trecho.Comp == "A" {
 
-				// Convertendo a string para int
-				id, err := strconv.Atoi(trecho.ID)
-				if err != nil {
-					fmt.Println("Erro ao converter ID:", err)
-					return false
-				}
-				fmt.Println(TrechoLivre[id])
-
 				mutexCommit.Lock()
 				ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
 				ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
@@ -276,8 +268,13 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 		}
 		// caso todos os trechos estiverem livres reserva eles
 		for _, trecho := range Request.Compra.Trechos {
-			if trecho.Comp == "B" {
-
+			if trecho.Comp == "A" {
+				// Convertendo a string para int
+				id, err := strconv.Atoi(trecho.ID)
+				if err != nil {
+					fmt.Println("Erro ao converter ID:", err)
+					return false
+				}
 				TrechoLivre[id] = false //trava o trecho
 			}
 		}
@@ -562,11 +559,6 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 	for _, trecho := range dados.Compra.Trechos {
 		if trecho.Comp == "A" {
 			// Convertendo a string para int
-			id, err = strconv.Atoi(trecho.ID)
-			if err != nil {
-				fmt.Println("Erro ao converter ID:", err)
-				return
-			}
 
 			mutexCommit.Lock()
 			ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
@@ -577,14 +569,19 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 			mutexCommit.Unlock()
 		}
 
-		if result {
-			for _, trecho := range dados.Compra.Trechos {
-				if trecho.Comp == "A" {
-					TrechoLivre[id] = false //trava o trecho
+	}
+	if result {
+		for _, trecho := range dados.Compra.Trechos {
+			if trecho.Comp == "A" {
+				id, err = strconv.Atoi(trecho.ID)
+				if err != nil {
+					fmt.Println("Erro ao converter ID:", err)
+					return
 				}
+				TrechoLivre[id] = false //trava o trecho
 			}
-			ReservarTrechos(dados)
 		}
+		ReservarTrechos(dados)
 	}
 
 	// Define o código de status e o tipo de conteúdo como texto simples

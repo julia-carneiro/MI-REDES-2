@@ -267,14 +267,6 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 		for _, trecho := range Request.Compra.Trechos {
 			if trecho.Comp == "C" {
 
-				// Convertendo a string para int
-				id, err := strconv.Atoi(trecho.ID)
-				if err != nil {
-					fmt.Println("Erro ao converter ID:", err)
-					return false
-				}
-				fmt.Println(TrechoLivre[id])
-
 				mutexCommit.Lock()
 				ok = ok && TrechoLivre[id]
 				fmt.Println("trecholivre ", ok)           //verifica se não tem outro processo fazendo alteração no trecho no momento
@@ -286,13 +278,20 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 				}
 			}
 		}
+
 		// caso todos os trechos estiverem livres reserva eles
 		for _, trecho := range Request.Compra.Trechos {
-			if trecho.Comp == "B" {
-
+			if trecho.Comp == "C" {
+				// Convertendo a string para int
+				id, err := strconv.Atoi(trecho.ID)
+				if err != nil {
+					fmt.Println("Erro ao converter ID:", err)
+					return false
+				}
 				TrechoLivre[id] = false //trava o trecho
 			}
 		}
+
 		ReservarTrechos(Request)
 
 		return ok
@@ -603,17 +602,16 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				result = false
 			}
-			mutexCommit.Unlock()
 		}
+	}
 
-		if result {
-			for _, trecho := range dados.Compra.Trechos {
-				if trecho.Comp == "C" {
-					TrechoLivre[id] = false //trava o trecho
-				}
+	if result {
+		for _, trecho := range dados.Compra.Trechos {
+			if trecho.Comp == "C" {
+				TrechoLivre[id] = false //trava o trecho
 			}
-			ReservarTrechos(dados)
 		}
+		ReservarTrechos(dados)
 	}
 
 	// Define o código de status e o tipo de conteúdo como texto simples
