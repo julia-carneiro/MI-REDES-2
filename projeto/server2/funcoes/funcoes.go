@@ -89,21 +89,20 @@ func BuscarRotaServidor(servidor string) map[string][]Trecho {
 	// Condicional para verificar o servidor
 	if servidor == "A" {
 		// BUSCA NO SERVIDOR 1
-		fmt.Println("Dentro de if A")
+
 		resp, err = http.Get(server1 + "8000/rota")
 	} else if servidor == "B" {
 		// BUSCA NO SERVIDOR 2
 
 		LerRotas() // Certifique-se de que LerRotas popula corretamente o mapa Rotas
 		trechos = Rotas
-		fmt.Println("Dentro de if B")
 
 	} else if servidor == "C" {
 		// BUSCA NO SERVIDOR 3
-		fmt.Println("Dentro de if C")
+
 		resp, err = http.Get(server3 + "8002/rota")
 	} else {
-		fmt.Println("Servidor desconhecido:", servidor)
+
 		return nil
 	}
 
@@ -141,7 +140,6 @@ func BuscaRotas(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
-	fmt.Println("Função buscar rotas, rota: ", reqrotas)
 
 	// Inicializa o mapa
 	rotas := make(map[string][]Trecho)
@@ -152,23 +150,21 @@ func BuscaRotas(w http.ResponseWriter, r *http.Request) {
 			rotas[chave] = append(rotas[chave], valor...)
 		}
 	}
-	fmt.Println("Depois de solicitar rotas de A")
 
 	if trechosB := BuscarRotaServidor("B"); trechosB != nil {
 		for chave, valor := range trechosB {
 			rotas[chave] = append(rotas[chave], valor...)
 		}
 	}
-	fmt.Println("Depois de solicitar rotas de A")
+
 	if trechosC := BuscarRotaServidor("C"); trechosC != nil {
 		for chave, valor := range trechosC {
 			rotas[chave] = append(rotas[chave], valor...)
 		}
 	}
-	fmt.Println("Depois de solicitar rotas de A")
+
 	// Busca todos os caminhos a partir dos dados combinados de `rotas`
 	menoresCaminhos := EncontrarTodosCaminhos(rotas, reqrotas.Origem, reqrotas.Destino)
-	fmt.Printf("Retorno do buscar rotas: %v\n", menoresCaminhos)
 
 	// Envia a resposta como JSON
 	w.Header().Set("Content-Type", "application/json")
