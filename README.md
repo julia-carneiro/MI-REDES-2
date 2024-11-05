@@ -4,8 +4,7 @@
 > - Júlia Carneiro Gonçalves de Souza.
 > - Thiago Souza Rodrigues.
 > -
-> - docker swarm join --token SWMTKN-1-47czrify79a6hkz52hfjvlydbjgnmefns6r3uyas8owj9nc9v4-awu25kcgwqaf4solha3yl5yuw 172.17.0.1:2377
-
+> docker swarm join --token SWMTKN-1-42rfnctqdzzqe67uguuo37cxdk1uwnhxhza0wes0kdnrr24fjz-2u2nqrllwzi2b68a2o4x170b8 172.16.103.6:2377
 Descrição do problema disponível em: [TEC502 - Problema 2 - Venda de Passagens.pdf](https://github.com/julia-carneiro/MI-REDES-2/blob/main/TEC502%20-%20Problema%202%20-%20Venda%20Compartilhada%20de%20Passagens.pdf)
 
 ### Introdução
