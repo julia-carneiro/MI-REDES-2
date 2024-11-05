@@ -53,8 +53,8 @@ type RetornoCompra struct {
 	Compra    Compra `json:"Compra"`
 }
 
-type ReqRotas struct{
-	Origem string `json:"Origem"`
+type ReqRotas struct {
+	Origem  string `json:"Origem"`
 	Destino string `json:"Destino"`
 }
 
@@ -65,13 +65,14 @@ var filePathRotas = "dados/rotas.json" //caminho para arquivo de rotas
 var mutex sync.Mutex
 var mutexVagas sync.Mutex
 var mutexCommit sync.Mutex
+
 var server2 = "http://server2:"
 var server3 = "http://server3:"
 
 func BuscarRotaServidor(servidor string) map[string][]Trecho {
 	fmt.Println("Função de buscar as rotas nos servidores")
 	LerRotas()
-	fmt.Println("Servidor ",servidor)
+	fmt.Println("Servidor ", servidor)
 	// Inicializa o mapa
 	trechos := make(map[string][]Trecho)
 
@@ -97,7 +98,7 @@ func BuscarRotaServidor(servidor string) map[string][]Trecho {
 		return nil
 	}
 
-	if(servidor == "B" || servidor == "C"){
+	if servidor == "B" || servidor == "C" {
 
 		// Tratamento de erro da requisição
 		if err != nil {
@@ -105,14 +106,14 @@ func BuscarRotaServidor(servidor string) map[string][]Trecho {
 			return nil
 		}
 		defer resp.Body.Close()
-	
+
 		// Lendo o corpo da resposta
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			fmt.Println("Erro ao ler o corpo da resposta:", err)
 			return nil
 		}
-	
+
 		// Decodificando o JSON para o mapa
 		err = json.Unmarshal(body, &trechos)
 		if err != nil {
@@ -240,8 +241,7 @@ func ReservarTrechos(Request PrepareRequest) {
 // os servidores retornam se conseguiram se prapar ou não
 func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 
-	var ok = true //variavel para pegar a resposta se o servidor conseguiu se preparar ou não
-
+	var ok = true         //variavel para pegar a resposta se o servidor conseguiu se preparar ou não
 	var req *http.Request //variavel da requisição
 
 	//transforma dados em json
@@ -258,19 +258,31 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 			if trecho.Comp == "A" {
 
 				// Convertendo a string para int
-				id, err = strconv.Atoi(trecho.ID)
+				id, err := strconv.Atoi(trecho.ID)
 				if err != nil {
 					fmt.Println("Erro ao converter ID:", err)
 					return false
 				}
+				fmt.Println(TrechoLivre[id])
+
+				mutexCommit.Lock()
 				ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
 				ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
+				mutexCommit.Unlock()
+				if !ok {
+					return ok
+				}
 			}
 		}
-		if ok { //caso os trechos estiverem livres e tenham vagas, eles são reservados
-			TrechoLivre[id] = false //trava o trecho
-			ReservarTrechos(Request)
+		// caso todos os trechos estiverem livres reserva eles
+		for _, trecho := range Request.Compra.Trechos {
+			if trecho.Comp == "B" {
+
+				TrechoLivre[id] = false //trava o trecho
+			}
 		}
+		ReservarTrechos(Request)
+
 		return ok
 		// envia a mensagem para o servidor 2 se preparar
 	} else if server == "B" {
@@ -538,7 +550,8 @@ func SolicitacaoCord(w http.ResponseWriter, r *http.Request) {
 func Commit(w http.ResponseWriter, r *http.Request) {
 	var dados PrepareRequest
 	ok := true
-	entra_if := false
+	var result bool = true
+
 	err := json.NewDecoder(r.Body).Decode(&dados)
 	if err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
@@ -558,18 +571,21 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 			mutexCommit.Lock()
 			ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
 			ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
-			if ok {
-				entra_if = true
+			if !ok {
+				result = false
 			}
 			mutexCommit.Unlock()
 		}
-		if ok && entra_if { //caso os trechos estiverem livres e tenham vagas, eles são reservados
-			TrechoLivre[id] = false //trava o trecho
+
+		if result {
+			for _, trecho := range dados.Compra.Trechos {
+				if trecho.Comp == "A" {
+					TrechoLivre[id] = false //trava o trecho
+				}
+			}
 			ReservarTrechos(dados)
 		}
 	}
-
-	var result bool = ok
 
 	// Define o código de status e o tipo de conteúdo como texto simples
 	w.WriteHeader(http.StatusOK)

@@ -13,7 +13,6 @@ type ReqRotas struct {
 	Destino string `json:"Destino"`
 }
 
-
 var server1 = "http://server1:"
 var server2 = "http://server2:"
 var server3 = "http://server3:"
@@ -50,7 +49,6 @@ func Teste2() {
 		fmt.Println("Erro ao converter o JSON de server1:", err)
 		return
 	}
-	fmt.Printf("\nServer 1: %v\n\n", menoresCaminhos1)
 
 	// Envia para server2
 	resp, err = http.Post(server2+"8001/rota/MenorCaminho", "application/json", bytes.NewBuffer(jsonData))
@@ -94,7 +92,7 @@ func Teste2() {
 		return
 	}
 
-	fmt.Printf("\nServer 1: %v\n\n", menoresCaminhos1)
-	fmt.Printf("\nServer 2: %v\n\n", menoresCaminhos2)
-	fmt.Printf("\nServer 3: %v\n\n", menoresCaminhos3)
+	fmt.Printf("\nServer 1: %v\n\n", menoresCaminhos1[0])
+	fmt.Printf("\nServer 2: %v\n\n", menoresCaminhos2[0])
+	fmt.Printf("\nServer 3: %v\n\n", menoresCaminhos3[0])
 }

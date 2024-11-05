@@ -9,7 +9,6 @@ import (
 	"os"
 	"sync"
 	"time"
-	
 )
 
 // Estruturas definidas para a compra
@@ -122,28 +121,28 @@ func main() {
 		},
 		Trechos: []Trecho{
 			{
-				Origem:  "Feira",
+				Origem:  "Brasília",
 				Destino: "Salvador",
 				Vagas:   12,
 				Peso:    5,
 				Comp:    "A",
-				ID:      "1",
+				ID:      "7",
 			},
 			{
-				Origem:  "Feira",
-				Destino: "São Paulo",
-				Vagas:   20,
+				Origem:  "Belo Horizonte",
+				Destino: "Rio de Janeiro",
+				Vagas:   2,
 				Peso:    20,
 				Comp:    "B",
-				ID:      "2",
+				ID:      "0",
 			},
 			{
-				Origem:  "Salvador",
+				Origem:  "Fortaleza",
 				Destino: "São Paulo",
 				Vagas:   10,
 				Peso:    5,
 				Comp:    "C",
-				ID:      "3",
+				ID:      "5",
 			},
 		},
 		Participantes: []string{"A", "B", "C"},

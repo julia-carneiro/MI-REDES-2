@@ -3,7 +3,7 @@
     {
       "Origem": "Belo Horizonte",
       "Destino": "Rio de Janeiro",
-      "Vagas": 15,
+      "Vagas": 2,
       "Peso": 10,
       "Comp": "B",
       "ID": "0"
@@ -29,7 +29,7 @@
     {
       "Origem": "Curitiba",
       "Destino": "São Paulo",
-      "Vagas": 18,
+      "Vagas": 17,
       "Peso": 12,
       "Comp": "B",
       "ID": "15"

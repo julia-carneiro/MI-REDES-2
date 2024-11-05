@@ -61,8 +61,8 @@ type RetornoCompra struct {
 
 var TrechoLivre = make([]bool, 100)
 
-type ReqRotas struct{
-	Origem string `json:"Origem"`
+type ReqRotas struct {
+	Origem  string `json:"Origem"`
 	Destino string `json:"Destino"`
 }
 
@@ -72,10 +72,14 @@ var filePathRotas = "dados/rotas.json" //caminho para arquivo de Rotas
 var mutex sync.Mutex
 var mutexVagas sync.Mutex
 var mutexCommit sync.Mutex
+
 var server1 = "http://server1:"
 var server2 = "http://server2:"
 
 func BuscarRotaServidor(servidor string) map[string][]Trecho {
+	fmt.Println("Função de buscar as rotas nos servidores")
+	LerRotas()
+	fmt.Println("Servidor ", servidor)
 	// Inicializa o mapa
 	trechos := make(map[string][]Trecho)
 
@@ -85,77 +89,89 @@ func BuscarRotaServidor(servidor string) map[string][]Trecho {
 	// Condicional para verificar o servidor
 	if servidor == "A" {
 		// BUSCA NO SERVIDOR 1
+		fmt.Println("Dentro de if A")
 		resp, err = http.Get(server1 + "8000/rota")
 	} else if servidor == "B" {
 		// BUSCA NO SERVIDOR 2
+		fmt.Println("Dentro de if B")
 		resp, err = http.Get(server2 + "8001/rota")
 	} else if servidor == "C" {
 		// BUSCA NO SERVIDOR 3
-		LerRotas()
+		LerRotas() // Certifique-se de que LerRotas popula corretamente o mapa Rotas
 		trechos = Rotas
-		
+		fmt.Println("Dentro de if C")
+
 	} else {
 		fmt.Println("Servidor desconhecido:", servidor)
 		return nil
 	}
 
-	if err != nil {
-		fmt.Println("Erro ao fazer a requisição:", err)
-		return nil
-	}
-	defer resp.Body.Close()
+	if servidor == "A" || servidor == "B" {
 
-	// Lendo o corpo da resposta
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Erro ao ler o corpo da resposta:", err)
-		return nil
-	}
-	//fmt.Println(body)
-	// Decodificando o JSON para o mapa
-	err = json.Unmarshal(body, &trechos)
-	if err != nil {
-		fmt.Println("Erro ao converter o JSON:", err)
-		return nil
+		// Tratamento de erro da requisição
+		if err != nil {
+			fmt.Println("Erro ao fazer a requisição:", err)
+			return nil
+		}
+		defer resp.Body.Close()
+
+		// Lendo o corpo da resposta
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Println("Erro ao ler o corpo da resposta:", err)
+			return nil
+		}
+
+		// Decodificando o JSON para o mapa
+		err = json.Unmarshal(body, &trechos)
+		if err != nil {
+			fmt.Println("Erro ao converter o JSON:", err)
+			return nil
+		}
 	}
 
 	return trechos
 }
 
-func BuscaRotas(w http.ResponseWriter, r *http.Request){
+func BuscaRotas(w http.ResponseWriter, r *http.Request) {
 	var reqrotas ReqRotas
 	err := json.NewDecoder(r.Body).Decode(&reqrotas)
 	if err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
 		return
 	}
+	fmt.Println("Função buscar rotas, rota: ", reqrotas)
+
 	// Inicializa o mapa
 	rotas := make(map[string][]Trecho)
 
-	trechosA := BuscarRotaServidor("A")
-	trechosB := BuscarRotaServidor("B")
-	trechosC := BuscarRotaServidor("C")
-
-	// concatena trechosA com rotas
-	for chave, valor := range trechosA {
-		rotas[chave] = append(rotas[chave], valor...)
+	// Chama os servidores e adiciona os trechos, se disponíveis
+	if trechosA := BuscarRotaServidor("A"); trechosA != nil {
+		for chave, valor := range trechosA {
+			rotas[chave] = append(rotas[chave], valor...)
+		}
 	}
+	fmt.Println("Depois de solicitar rotas de A")
 
-	// concatena trechosB com rotas
-	for chave, valor := range trechosB {
-		rotas[chave] = append(rotas[chave], valor...)
+	if trechosB := BuscarRotaServidor("B"); trechosB != nil {
+		for chave, valor := range trechosB {
+			rotas[chave] = append(rotas[chave], valor...)
+		}
 	}
-
-	// concatena trechosC com rotas
-	for chave, valor := range trechosC {
-		rotas[chave] = append(rotas[chave], valor...)
+	fmt.Println("Depois de solicitar rotas de A")
+	if trechosC := BuscarRotaServidor("C"); trechosC != nil {
+		for chave, valor := range trechosC {
+			rotas[chave] = append(rotas[chave], valor...)
+		}
 	}
+	fmt.Println("Depois de solicitar rotas de A")
+	// Busca todos os caminhos a partir dos dados combinados de `rotas`
+	menoresCaminhos := EncontrarTodosCaminhos(rotas, reqrotas.Origem, reqrotas.Destino)
+	fmt.Printf("Retorno do buscar rotas: %v\n", menoresCaminhos)
 
-	var menoresCaminhos = EncontrarTodosCaminhos(rotas,reqrotas.Origem,reqrotas.Destino)
-
+	// Envia a resposta como JSON
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(menoresCaminhos)
-	
 }
 
 func ConverteID(idstring string) int {
@@ -257,16 +273,28 @@ func EnviarRequestPreparacao(server string, Request PrepareRequest) bool {
 					fmt.Println("Erro ao converter ID:", err)
 					return false
 				}
+				fmt.Println(TrechoLivre[id])
 
-				ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
+				mutexCommit.Lock()
+				ok = ok && TrechoLivre[id]
+				fmt.Println("trecholivre ", ok)           //verifica se não tem outro processo fazendo alteração no trecho no momento
 				ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
-
+				fmt.Println("trecho sem vagas ", ok)
+				mutexCommit.Unlock()
+				if !ok {
+					return ok
+				}
 			}
 		}
-		if ok { //caso os trechos estiverem livres e tenham vagas, eles são reservados
-			TrechoLivre[id] = false //trava o trecho
-			ReservarTrechos(Request)
+		// caso todos os trechos estiverem livres reserva eles
+		for _, trecho := range Request.Compra.Trechos {
+			if trecho.Comp == "B" {
+
+				TrechoLivre[id] = false //trava o trecho
+			}
 		}
+		ReservarTrechos(Request)
+
 		return ok
 		// envia a mensagem para o servidor A se preparar
 	} else if server == "A" {
@@ -552,7 +580,7 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 
 	var dados PrepareRequest
 	ok := true
-	entra_if := false
+	var result bool = true
 	err := json.NewDecoder(r.Body).Decode(&dados)
 	if err != nil {
 		http.Error(w, "Erro ao decodificar JSON", http.StatusBadRequest)
@@ -572,17 +600,21 @@ func Commit(w http.ResponseWriter, r *http.Request) {
 			ok = ok && TrechoLivre[id]                //verifica se não tem outro processo fazendo alteração no trecho no momento
 			ok = ok && VerificaVagasTrecho(trecho.ID) //verifica se há vagas no trecho
 			mutexCommit.Unlock()
-			if ok {
-				entra_if = true
+			if !ok {
+				result = false
 			}
+			mutexCommit.Unlock()
 		}
-		if ok && entra_if { //caso os trechos estiverem livres e tenham vagas, eles são reservados
-			TrechoLivre[id] = false //trava o trecho
+
+		if result {
+			for _, trecho := range dados.Compra.Trechos {
+				if trecho.Comp == "C" {
+					TrechoLivre[id] = false //trava o trecho
+				}
+			}
 			ReservarTrechos(dados)
 		}
 	}
-
-	var result bool = ok
 
 	// Define o código de status e o tipo de conteúdo como texto simples
 	w.WriteHeader(http.StatusOK)
