@@ -62,6 +62,54 @@ Em suma, a implementação do sistema de reservas entre as companhias aéreas de
 
 As lições aprendidas ao longo deste projeto indicam que, embora o sistema atenda às necessidades atuais, há espaço para melhorias, especialmente em relação à latência e ao tratamento de falhas. Futuras implementações podem considerar o uso de abordagens mais avançadas para otimizar o desempenho.
 
+### Executar
+
+1. **Crie uma rede Docker**
+   
+   A rede será utilizada para conectar todos os contêineres.
+
+   ```bash
+   docker network create rede
+   ```
+
+2. **Build dos Contêineres**
+
+   Compile as imagens Docker para os três servidores e o contêiner de teste.
+
+   ```bash
+   docker build -t server1 .
+   docker build -t server2 .
+   docker build -t server3 .
+   docker build -t teste .
+   ```
+
+3. **Iniciar os Contêineres dos Servidores**
+
+   Execute cada servidor em um contêiner separado, associando cada um à rede `rede` e mapeando as portas conforme necessário. Além disso, monte o volume `dados` para cada contêiner para compartilhar dados entre o sistema de arquivos local e os contêineres.
+
+   ```bash
+   docker run -d --name server1 --network rede -p 8000:8000 -v ${PWD}/dados:/app/dados server1
+   docker run -d --name server2 --network rede -p 8001:8001 -v ${PWD}/dados:/app/dados server2
+   docker run -d --name server3 --network rede -p 8002:8002 -v ${PWD}/dados:/app/dados server3
+   ```
+   
+   - `--network rede`: Conecta os contêineres à rede `rede`.
+   - `-p <host_port>:<container_port>`: Mapeia as portas entre o host e o contêiner.
+   - `-v ${PWD}/dados:/app/dados`: Monta o diretório `dados` do host no contêiner.
+
+4. **Iniciar o Contêiner de Teste**
+
+   Execute o contêiner `teste` interativamente, permitindo a interação direta com os servidores.
+
+   ```bash
+   docker run -it --rm --name teste --network rede teste
+   ```
+
+   - `--network rede`: Conecta o contêiner `teste` à mesma rede que os servidores.
+
+### Observação
+
+Certifique-se de que o diretório `dados` exista no diretório atual antes de iniciar os contêineres. Ele será montado em cada contêiner para armazenar dados persistentes.
 ### Referências
 - O que é uma API de REST? | IBM. Disponível em: <https://www.ibm.com/br-pt/topics/rest-apis>.
 - TO, C. Two-phase commit protocol. Disponível em: <https://concursos.fandom.com/wiki/Two-phase_commit_protocol>. Acesso em: 1 nov. 2024.
